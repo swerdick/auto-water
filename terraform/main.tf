@@ -1,3 +1,8 @@
+terraform {
+  backend “http” {
+  }
+}
+
 provider “aws” {
   region     = var.region
   #access_key = var.access_key
@@ -5,7 +10,4 @@ provider “aws” {
   version = “~> 2.0”
 }
 
-terraform {
-  backend "http" {
-  }
-}
+
