@@ -1,15 +1,6 @@
-include:
-  - template: Terraform.latest.gitlab-ci.yml
-
-variables:
-  # If not using GitLab's HTTP backend, remove this line and specify TF_HTTP_* variables
-  TF_STATE_NAME: default
-  TF_CACHE_KEY: default
-
 image: registry.gitlab.com/gitlab-org/terraform-images/stable:latest
 
 variables:
-  #TF_ROOT: ${CI_PROJECT_DIR}/environments/example/production
   TF_ROOT: ${CI_PROJECT_DIR}/terraform
   TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/auto-water-prod
 
