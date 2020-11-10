@@ -31,6 +31,9 @@ validate:
 
 plan:
   stage: build
+  variables:
+    TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
+    TF_VAR_accessSecret: ${AWS_SECRET_ACCESS_KEY}
   script:
     - gitlab-terraform plan
     - gitlab-terraform plan-json
@@ -43,6 +46,9 @@ plan:
 
 apply:
   stage: deploy
+  variables:
+    TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
+    TF_VAR_accessSecret: ${AWS_SECRET_ACCESS_KEY}
   environment:
     name: production
   script:
