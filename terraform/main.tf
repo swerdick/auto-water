@@ -6,5 +6,5 @@ provider "aws" {
   region     = var.region
   access_key = var.accessKey
   secret_key = var.accessSecret
-  version = "~> 3.0"
+  version = "~> 2.0"
 }
