@@ -4,5 +4,7 @@ terraform {
 
 provider "aws" {
   region     = var.region
-  version = "~> 2.0"
+  access_key = var.accessKey
+  secret_key = var.accessSecret
+  version = "~> 3.0"
 }
