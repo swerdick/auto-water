@@ -35,8 +35,8 @@ plan:
     - gitlab-terraform plan
     - gitlab-terraform plan-json
   variables:
-    TF_VAR_AWS_KEY: ${AWS_ACCESS_KEY_ID}
-    TF_VAR_AWS_SECRET: ${AWS_SECRET_ACCESS_KEY}
+    TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
+    TF_VAR_accessSecret: ${AWS_SECRET_ACCESS_KEY}
   artifacts:
     name: plan
     paths:
