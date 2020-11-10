@@ -3,8 +3,6 @@ image: registry.gitlab.com/gitlab-org/terraform-images/stable:latest
 variables:
   TF_ROOT: ${CI_PROJECT_DIR}/terraform
   TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/auto-water-prod
-  TF_VAR_AWS_KEY: ${AWS_ACCESS_KEY_ID}
-  TF_VAR_AWS_SECRET: ${AWS_SECRET_ACCESS_KEY}
 
 cache:
   key: auto-water-prod
@@ -36,6 +34,9 @@ plan:
   script:
     - gitlab-terraform plan
     - gitlab-terraform plan-json
+  variables:
+    TF_VAR_AWS_KEY: ${AWS_ACCESS_KEY_ID}
+    TF_VAR_AWS_SECRET: ${AWS_SECRET_ACCESS_KEY}
   artifacts:
     name: plan
     paths:
