@@ -1,7 +1,7 @@
 import boto3
 
 s3_client = boto3.client('s3')
-greengrass_client = boto3.client('greengrass')
+#greengrass_client = boto3.client('greengrass')
 
 S3_BUCKET_NAME = 'constellation-auto-water'
 S3_DOCKER_COMPOSE_KEY = 'docker-dependencies'
