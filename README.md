@@ -2,6 +2,10 @@
 
 This repository contains source code and terraform scripts for getting a rasberrypi to talk to AWS
 
+Found this lovely docker image to enable building armv7 images in gitlab CI.  Required for running containers on the rasberry pi
+
+https://hub.docker.com/r/jonoh/docker-buildx-qemu
+
 ### Greengrass
 AWS Greengrass seems like it will let me automate deployments of containerized applications to my rasberry pi device.  I'll try setting it up that way to automate code deployments
 

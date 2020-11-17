@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   web:
-    build: .
+    image: "registry.gitlab.com/stephen.werdick/auto-water"
     ports:
       - "5000:5000"
   redis:
