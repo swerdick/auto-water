@@ -18,6 +18,7 @@ stages:
   - validate
   - build
   - deploy
+  - deploy-artifacts
 
 init:
   stage: prepare
@@ -30,7 +31,7 @@ terraform-validate:
     - gitlab-terraform validate
 
 docker-build:
-  stage: build
+  stage: validate
   image: jonoh/docker-buildx-qemu
   variables:
     DOCKER_HOST: tcp://docker:2375/
@@ -67,6 +68,7 @@ terraform-plan:
 
 terraform-apply:
   stage: deploy
+  needs: ['terraform-plan']
   variables:
     TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
     TF_VAR_accessSecret: ${AWS_SECRET_ACCESS_KEY}
@@ -82,7 +84,8 @@ terraform-apply:
     
 docker-push:
   image: jonoh/docker-buildx-qemu
-  stage: deploy
+  stage: build
+  needs: ['docker-build']
   variables:
     DOCKER_HOST: tcp://docker:2375/
   services:
@@ -102,10 +105,11 @@ docker-push:
 
 deploy-artifacts:
   image: jpbarto/boto3
-  stage: deploy
+  stage: deploy-artifacts
+  needs: ['docker-push', 'terraform-apply']
   only:
     - master
   before_script:
     - cd ${CI_PROJECT_DIR}/src/deployment-scripts
   script:
-    - deploy-prod.py
+    - python deploy-prod.py
