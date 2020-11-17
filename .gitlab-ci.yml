@@ -24,7 +24,7 @@ init:
   script:
     - gitlab-terraform init
 
-validate:
+terraform-validate:
   stage: validate
   script:
     - gitlab-terraform validate
@@ -50,7 +50,7 @@ docker-build:
     # - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
     - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
 
-plan:
+terraform-plan:
   stage: build
   variables:
     TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
@@ -65,7 +65,7 @@ plan:
     reports:
       terraform: ${TF_ROOT}/plan.json
 
-apply:
+terraform-apply:
   stage: deploy
   variables:
     TF_VAR_accessKey: ${AWS_ACCESS_KEY_ID}
@@ -75,7 +75,7 @@ apply:
   script:
     - gitlab-terraform apply
   dependencies:
-    - plan
+    - terraform-plan
   when: manual
   only:
     - master
@@ -99,3 +99,13 @@ docker-push:
    # - docker push "$CI_REGISTRY_IMAGE"
   only:
     - master
+
+deploy-artifacts:
+  image: jpbarto/boto3
+  stage: deploy
+  only:
+    - master
+  before_script:
+    - cd ${CI_PROJECT_DIR}/src/deployment-scripts
+  script:
+    - deploy-prod.py
