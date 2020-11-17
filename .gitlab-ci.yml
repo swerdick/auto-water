@@ -30,16 +30,25 @@ validate:
     - gitlab-terraform validate
 
 docker-build:
-  image: docker:latest
   stage: build
+  image: jonoh/docker-buildx-qemu
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
   services:
-    - docker:dind
+    - name: docker:dind
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - cd ${CI_PROJECT_DIR}/src/poc
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    # Use docker-container driver to allow useful features (push/multi-platform)
+    #- docker buildx create --driver docker-container --use
+    #- docker buildx inspect --bootstrap
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE" .
-    ### - docker push "$CI_REGISTRY_IMAGE"
+    # Important: Ensures execution of other binary formats is enabled in the kernel
+    - update-binfmts --enable
+    - docker buildx create --name rasberrypi-builder
+    - docker buildx use rasberrypi-builder
+    # - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
+    - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
 
 plan:
   stage: build
@@ -72,15 +81,21 @@ apply:
     - master
     
 docker-push:
-  image: docker:latest
+  image: jonoh/docker-buildx-qemu
   stage: deploy
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
   services:
-    - docker:dind
+    - name: docker:dind
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - cd ${CI_PROJECT_DIR}/src/poc
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE" .
-    - docker push "$CI_REGISTRY_IMAGE"
+    # Important: Ensures execution of other binary formats is enabled in the kernel
+    - update-binfmts --enable
+    - docker buildx create --name rasberrypi-builder
+    - docker buildx use rasberrypi-builder
+    - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" --push .
+   # - docker push "$CI_REGISTRY_IMAGE"
   only:
     - master
