@@ -13,7 +13,10 @@ print('starting s3 upload...')
 s3_client.upload_file('../poc/docker-compose.yml', S3_BUCKET_NAME, S3_DOCKER_COMPOSE_KEY)
 
 print('starting greengrass deployment...')
+response=greengrass_client.create_group_version(GroupId=GREENGRASS_GROUP_ID)
+
 greengrass_client.create_deployment(
     DeploymentType='NewDeployment',
-    GroupId=GREENGRASS_GROUP_ID
+    GroupId=GREENGRASS_GROUP_ID,
+    GroupVersionId=response['Version']
 )
