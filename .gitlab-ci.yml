@@ -145,4 +145,4 @@ deploy-artifacts:
     - pip install boto3
     - cd ${CI_PROJECT_DIR}/src/deployment-scripts
   script:
-    - python deploy-prod.py
+    - python3 deploy-prod.py
