@@ -29,6 +29,9 @@ terraform-validate:
   stage: validate
   script:
     - gitlab-terraform validate
+  only:
+    changes:
+      - terraform/*
 
 docker-build:
   stage: validate
@@ -50,6 +53,9 @@ docker-build:
     - docker buildx use rasberrypi-builder
     # - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
     - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
+  only:
+    changes:
+        - src/*
 
 terraform-plan:
   stage: build
@@ -65,6 +71,9 @@ terraform-plan:
       - ${TF_ROOT}/plan.cache
     reports:
       terraform: ${TF_ROOT}/plan.json
+  only:
+    changes:
+        - terraform/*
 
 terraform-apply:
   stage: deploy
@@ -80,8 +89,11 @@ terraform-apply:
     - terraform-plan
   when: manual
   only:
-    - master
-    
+    refs:
+      - master
+    changes:
+        - terraform/*
+        
 docker-push:
   image: jonoh/docker-buildx-qemu
   stage: build
@@ -101,7 +113,10 @@ docker-push:
     - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" --push .
    # - docker push "$CI_REGISTRY_IMAGE"
   only:
-    - master
+    refs:
+      - master
+    changes:
+      - src/*
 
 deploy-artifacts:
   image: jpbarto/boto3

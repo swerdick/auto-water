@@ -1,4 +1,3 @@
-##FROM python:3.7-alpine
 FROM arm32v7/alpine
 WORKDIR /code
 ENV FLASK_APP=app.py
