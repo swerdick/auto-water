@@ -3,18 +3,18 @@ resource "aws_iam_role" "pi_role" {
   name = "pi_role"
 
   assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
     {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Action": "sts:AssumeRole",
-          "Principal": {
-            "Service": "greengrass.amazonaws.com"
-          },
-          "Effect": "Allow"
-        }
-      ]
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "greengrass.amazonaws.com"
+      },
+      "Effect": "Allow"
     }
+  ]
+}
 EOF
 }
 
