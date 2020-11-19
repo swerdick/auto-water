@@ -52,7 +52,8 @@ docker-build:
     - docker buildx create --name rasberrypi-builder
     - docker buildx use rasberrypi-builder
     # - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
-    - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
+    #- docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
+    - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE":test --push .
   only:
     changes:
         - src/*
@@ -107,10 +108,13 @@ docker-push:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     # Important: Ensures execution of other binary formats is enabled in the kernel
-    - update-binfmts --enable
-    - docker buildx create --name rasberrypi-builder
-    - docker buildx use rasberrypi-builder
-    - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" --push .
+   # - update-binfmts --enable
+   # - docker buildx create --name rasberrypi-builder
+   # - docker buildx use rasberrypi-builder
+   - docker pull "$CI_REGISTRY_IMAGE":test
+   - docker tag "$CI_REGISTRY_IMAGE":test "$CI_REGISTRY_IMAGE":latest
+   - docker push "$CI_REGISTRY_IMAGE":latest
+   # - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" --push .
    # - docker push "$CI_REGISTRY_IMAGE"
   only:
     refs:
@@ -121,9 +125,12 @@ docker-push:
 deploy-artifacts:
   image: jpbarto/boto3
   stage: deploy-artifacts
-  needs: ['docker-push', 'terraform-apply']
+  needs: ['docker-push']
   only:
-    - master
+    refs:
+      - master
+    changes:
+      - src/*
   before_script:
     - cd ${CI_PROJECT_DIR}/src/deployment-scripts
   script:
