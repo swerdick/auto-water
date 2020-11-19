@@ -129,7 +129,7 @@ docker-push:
 
 deploy-artifacts:
   image: jpbarto/boto3
-  stage: deploy-artifacts
+  stage: deploy
   needs: ['docker-push']
   only:
     refs:
