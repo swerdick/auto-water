@@ -29,10 +29,6 @@ terraform-validate:
   stage: validate
   script:
     - gitlab-terraform validate
-  only:
-    changes:
-      - terraform/*
-      - .gitlab-ci.yml
 
 docker-build:
   stage: validate
@@ -55,10 +51,6 @@ docker-build:
     # - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
     #- docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE" .
     - docker buildx build --platform linux/arm/v7 -t "$CI_REGISTRY_IMAGE":test --push .
-  only:
-    changes:
-        - src/*
-        - .gitlab-ci.yml
 
 terraform-plan:
   stage: build
@@ -74,10 +66,6 @@ terraform-plan:
       - ${TF_ROOT}/plan.cache
     reports:
       terraform: ${TF_ROOT}/plan.json
-  only:
-    changes:
-        - terraform/*
-        - .gitlab-ci.yml
 
 terraform-apply:
   stage: deploy
@@ -95,9 +83,6 @@ terraform-apply:
   only:
     refs:
       - master
-    changes:
-        - terraform/*
-        - .gitlab-ci.yml
         
 docker-push:
   image: jonoh/docker-buildx-qemu
@@ -123,9 +108,6 @@ docker-push:
   only:
     refs:
       - master
-    changes:
-      - src/*
-      - .gitlab-ci.yml
 
 deploy-artifacts:
   #image: jpbarto/boto3
@@ -135,9 +117,6 @@ deploy-artifacts:
   only:
     refs:
       - master
-    changes:
-      - src/*
-      - .gitlab-ci.yml
   before_script:
     - apk add --no-cache gcc musl-dev linux-headers
     - apk add python3
