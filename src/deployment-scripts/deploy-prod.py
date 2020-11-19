@@ -1,10 +1,19 @@
 import boto3
 
 s3_client = boto3.client('s3')
-#greengrass_client = boto3.client('greengrass')
+greengrass_client = boto3.client('greengrass')
 
 S3_BUCKET_NAME = 'constellation-auto-water'
 S3_DOCKER_COMPOSE_KEY = 'pi-artifacts/docker-compose.yml'
+GREENGRASS_GROUP_ID = '5d1ebd1d-5727-4dbf-9970-e5a7441018f9'
+
+##############################################################
 
 print('starting s3 upload...')
 s3_client.upload_file('../poc/docker-compose.yml', S3_BUCKET_NAME, S3_DOCKER_COMPOSE_KEY)
+
+print('starting greengrass deployment...')
+greengrass_client.create_deployment(
+    DeploymentType='NewDeployment',
+    GroupId=GREENGRASS_GROUP_ID
+)

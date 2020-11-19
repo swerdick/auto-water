@@ -128,7 +128,8 @@ docker-push:
       - .gitlab-ci.yml
 
 deploy-artifacts:
-  image: jpbarto/boto3
+  #image: jpbarto/boto3
+  image: alpine
   stage: deploy
   needs: ['docker-push']
   only:
@@ -138,6 +139,10 @@ deploy-artifacts:
       - src/*
       - .gitlab-ci.yml
   before_script:
+    - apk add --no-cache gcc musl-dev linux-headers
+    - apk add python3
+    - apk add py3-pip
+    - pip install boto3
     - cd ${CI_PROJECT_DIR}/src/deployment-scripts
   script:
     - python deploy-prod.py
