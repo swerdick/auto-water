@@ -32,6 +32,7 @@ terraform-validate:
   only:
     changes:
       - terraform/*
+      - .gitlab-ci.yml
 
 docker-build:
   stage: validate
@@ -57,6 +58,7 @@ docker-build:
   only:
     changes:
         - src/*
+        - .gitlab-ci.yml
 
 terraform-plan:
   stage: build
@@ -75,6 +77,7 @@ terraform-plan:
   only:
     changes:
         - terraform/*
+        - .gitlab-ci.yml
 
 terraform-apply:
   stage: deploy
@@ -94,6 +97,7 @@ terraform-apply:
       - master
     changes:
         - terraform/*
+        - .gitlab-ci.yml
         
 docker-push:
   image: jonoh/docker-buildx-qemu
@@ -121,6 +125,7 @@ docker-push:
       - master
     changes:
       - src/*
+      - .gitlab-ci.yml
 
 deploy-artifacts:
   image: jpbarto/boto3
@@ -131,6 +136,7 @@ deploy-artifacts:
       - master
     changes:
       - src/*
+      - .gitlab-ci.yml
   before_script:
     - cd ${CI_PROJECT_DIR}/src/deployment-scripts
   script:
