@@ -37,8 +37,38 @@ resource "aws_iam_policy" "pi_bucket_access_policy" {
 EOF
 }
 
+resource "aws_iam_policy" "pi_cloudwatch_policy" {
+  name = "pi_cloudwatch_policy"
+  
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
 resource "aws_iam_policy_attachment" "pi_role_attachment" {
   name       = "pi_role_attachment"
   roles      = [aws_iam_role.pi_role.name]
   policy_arn = aws_iam_policy.pi_bucket_access_policy.arn
+}
+
+resource "aws_iam_policy_attachment" "pi_cloudwatch_role_attachment" {
+  name       = "pi_role_attachment"
+  roles      = [aws_iam_role.pi_role.name]
+  policy_arn = aws_iam_policy.pi_cloudwatch_policy.arn
 }
