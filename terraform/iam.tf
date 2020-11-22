@@ -27,10 +27,15 @@ resource "aws_iam_policy" "pi_bucket_access_policy" {
   "Statement": [
     {
       "Action": [
-        "s3:GetObject"
+        "s3:GetObject",
+        "s3:GetBucket",
+        "s3:List"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::constellation-auto-water/*"
+      "Resource": [
+        "arn:aws:s3:::constellation-auto-water/*",
+        "arn:aws:s3:::constellation-auto-water/"
+      ]
     }
   ]
 }
