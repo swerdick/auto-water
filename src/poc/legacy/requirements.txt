@@ -1,0 +1,3 @@
+gpiozero
+wheel
+RPi.GPIO
