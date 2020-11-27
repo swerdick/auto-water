@@ -6,6 +6,18 @@ Found this lovely docker image to enable building armv7 images in gitlab CI.  Re
 
 https://hub.docker.com/r/jonoh/docker-buildx-qemu
 
+(Lessons Learned)[LEARNINGS.md]
+
+### Things I Manually Setup
+* Greengrass dependencies on the RasberryPI itself as documented in the developer guide
+* The quickstart guide created the following for me:
+    * Greengrass group
+    * Greengrass core
+    * A lambda function + Greengrass connector (both of which I manually deleted)
+* Greengrass Docker Application Connector
+* Enabled Greengrass logging manually
+* Setup a one day retention policy on all the greengrass log groups
+
 ### Greengrass
 AWS Greengrass seems like it will let me automate deployments of containerized applications to my rasberry pi device.  I'll try setting it up that way to automate code deployments
 
