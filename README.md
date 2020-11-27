@@ -6,7 +6,8 @@ Found this lovely docker image to enable building armv7 images in gitlab CI.  Re
 
 https://hub.docker.com/r/jonoh/docker-buildx-qemu
 
-(Lessons Learned)[LEARNINGS.md]
+[Lessons Learned](LEARNINGS.md)
+[Project Costs](COSTS.md)
 
 ### Things I Manually Setup
 * Greengrass dependencies on the RasberryPI itself as documented in the developer guide
