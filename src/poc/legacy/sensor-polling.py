@@ -1,6 +1,7 @@
-from gpiozero import LED
 from time import sleep
+
 import RPi.GPIO as GPIO
+from gpiozero import LED
 
 channel = 21
 
@@ -15,8 +16,9 @@ def callback(channel):
     else:
         print("water detected")
 
-#GPIO.add_event_detect(channel, GPIO.BOTH, bouncetime=300)
-#GPIO.add_event_callback(channel, callback)
+
+# GPIO.add_event_detect(channel, GPIO.BOTH, bouncetime=300)
+# GPIO.add_event_callback(channel, callback)
 
 led = LED(14)
 
@@ -27,4 +29,3 @@ while True:
         led.off()
     else:
         led.on()
-
