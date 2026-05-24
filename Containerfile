@@ -1,19 +1,19 @@
 # auto-water sensor poller. Target platform: linux/arm64 (Raspberry Pi 5).
 # Build stage
-FROM docker.io/library/python:3.12-bookworm AS builder
+FROM docker.io/library/python:3.13-trixie AS builder
 
 WORKDIR /src
 COPY requirements.txt requirements-hw.txt ./
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt -r requirements-hw.txt
 
 # Runtime stage
-FROM docker.io/library/python:3.12-slim-bookworm
+FROM docker.io/library/python:3.13-slim-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /usr/local
 WORKDIR /app
-COPY auto_water ./auto_water
+COPY src/auto_water ./auto_water
 
 RUN useradd -u 1000 appuser
 USER appuser

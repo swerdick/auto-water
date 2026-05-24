@@ -12,9 +12,6 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/poc
     env:
       CONTAINER_CLI: docker
     steps:
@@ -22,9 +19,9 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
           cache: 'pip'
-          cache-dependency-path: src/poc/requirements-dev.txt
+          cache-dependency-path: requirements-dev.txt
 
       - uses: extractions/setup-just@v3
 
@@ -33,7 +30,30 @@ jobs:
 
       - name: Run CI pipeline
         run: just ci
-        working-directory: .
+
+  container-arm64:
+    name: Container build (linux/arm64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Build-only sanity check on the real target arch (under QEMU). The
+      # deploy workflow does the same build with push:true on merge to main.
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          platforms: linux/arm64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   codeql:
     name: CodeQL (Python)
@@ -48,8 +68,21 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: python
-          source-root: src/poc
+          source-root: src
 
       - uses: github/codeql-action/autobuild@v4
 
       - uses: github/codeql-action/analyze@v4
+
+  ci-ok:
+    if: always()
+    needs: [ci, container-arm64, codeql]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ "${{ needs.ci.result }}" != "success" \
+             || "${{ needs.container-arm64.result }}" != "success" \
+             || "${{ needs.codeql.result }}" != "success" ]]; then
+            echo "A required check failed"
+            exit 1
+          fi

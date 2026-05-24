@@ -9,19 +9,6 @@ from .base import ReadingSink
 
 logger = logging.getLogger(__name__)
 
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS readings (
-    id BIGSERIAL PRIMARY KEY,
-    sensor_id TEXT NOT NULL,
-    metric TEXT NOT NULL,
-    value DOUBLE PRECISION NOT NULL,
-    unit TEXT NOT NULL,
-    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS readings_recorded_at_idx ON readings (recorded_at);
-CREATE INDEX IF NOT EXISTS readings_sensor_metric_idx ON readings (sensor_id, metric, recorded_at);
-"""
-
 _INSERT = "INSERT INTO readings (sensor_id, metric, value, unit, recorded_at) VALUES (%s, %s, %s, %s, %s)"
 
 
@@ -34,10 +21,12 @@ def _default_connect(dsn: str) -> Any:
 class PostgresSink(ReadingSink):
     """Writes readings to a Postgres ``readings`` table (a CNPG cluster in prod).
 
-    The connection is created lazily and re-established on demand, so the sink
-    rides out the backend going away (e.g. gondor's nightly downtime): a failed
-    write drops the connection and re-raises, the poller buffers the batch, and
-    the next attempt reconnects and flushes.
+    The schema is owned by the migrations (``auto_water.migrate``), not this sink —
+    the ``readings`` table is expected to already exist (migrations run as a k8s
+    initContainer / compose one-shot before the poller starts). The connection is
+    created lazily and re-established on demand, so the sink rides out the backend
+    going away (e.g. gondor's nightly downtime): a failed write drops the connection
+    and re-raises, the poller buffers the batch, and the next attempt reconnects.
 
     ``connect`` is injectable for testing; the default imports ``psycopg`` lazily.
     """
@@ -69,13 +58,7 @@ class PostgresSink(ReadingSink):
     def _connection(self) -> Any:
         if self._conn is None or getattr(self._conn, "closed", False):
             self._conn = self._connect(self._dsn)
-            self._ensure_schema(self._conn)
         return self._conn
-
-    def _ensure_schema(self, conn: Any) -> None:
-        with conn.cursor() as cur:
-            cur.execute(_SCHEMA)
-        conn.commit()
 
     def _safe_close(self) -> None:
         if self._conn is not None:

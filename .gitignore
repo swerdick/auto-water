@@ -22,10 +22,5 @@ build/
 *.swp
 *.swo
 
-# Terraform
-terraform/.terraform/
-terraform/*.tfstate*
-terraform/.terraform.lock.hcl
-
 # Environment
 .env

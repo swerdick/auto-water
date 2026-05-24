@@ -1,5 +1,5 @@
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 120
 
 [tool.ruff.lint]
@@ -11,4 +11,4 @@ exclude_dirs = ["tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src"]

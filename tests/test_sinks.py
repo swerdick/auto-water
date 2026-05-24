@@ -102,17 +102,18 @@ def test_postgres_write_empty_does_not_connect():
     sink.write([])  # must not call connect()
 
 
-def test_postgres_write_creates_schema_and_inserts():
+def test_postgres_write_inserts_readings():
     conn = FakeConnection()
     sink = PostgresSink("dsn", connect=_connector(conn))
     sink.write(_readings())
 
-    assert any("CREATE TABLE" in sql for sql in conn.executed)
+    # Schema is owned by migrations now — the sink only inserts, never CREATEs.
+    assert not any("CREATE TABLE" in sql for sql in conn.executed)
     assert len(conn.inserted) == 2
     first = conn.inserted[0]
     assert first[:4] == ("env", "temperature", 21.5, "celsius")
     assert first[4] is not None  # recorded_at timestamp passed through
-    assert conn.commits >= 2  # schema + insert
+    assert conn.commits >= 1  # the insert is committed
 
 
 def test_postgres_reconnects_after_failure():

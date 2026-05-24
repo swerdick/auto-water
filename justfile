@@ -8,15 +8,23 @@ default:
 
 # Run the poller locally (stdout sink, no hardware) — Ctrl-C to stop
 dev:
-    cd src/poc && SINK=stdout python -m auto_water
+    PYTHONPATH=src SINK=stdout python -m auto_water
+
+# Apply pending database migrations (needs DATABASE_URL in env)
+migrate:
+    PYTHONPATH=src python -m auto_water.migrate up
+
+# Roll back migrations (default to version 0; pass --to N to stop earlier)
+migrate-down *args:
+    PYTHONPATH=src python -m auto_water.migrate down {{args}}
 
 # Compile/bundle source code (syntax check for Python)
 build:
-    python -m compileall src/poc/
+    python -m compileall src
 
 # Run unit tests
 test:
-    cd src/poc && python -m pytest
+    python -m pytest
 
 # Run integration tests
 test-integration:
@@ -24,14 +32,14 @@ test-integration:
 
 # Run all static analysis (linters, security scanning)
 check:
-    cd src/poc && ruff check .
-    cd src/poc && bandit -r . --exclude ./tests
-    cd src/poc && pip-audit -r requirements.txt
+    ruff check src tests
+    bandit -r src
+    pip-audit -r requirements.txt
 
 # Format code
 fmt:
-    cd src/poc && ruff format .
-    cd src/poc && ruff check --fix .
+    ruff format src tests
+    ruff check --fix src tests
 
 # Remove build artifacts
 clean:
@@ -41,18 +49,49 @@ clean:
 
 # Build the container image
 container-build:
-    {{container_cli}} build -t {{project_name}}:{{image_tag}} -f src/poc/Containerfile src/poc/
+    {{container_cli}} build -t {{project_name}}:{{image_tag}} -f Containerfile .
 
 # Start the project in containers
 up:
-    cd src/poc && {{container_cli}}-compose up
+    {{container_cli}} compose up
 
 # Stop containers
 down:
-    cd src/poc && {{container_cli}}-compose down
+    {{container_cli}} compose down
 
-# Run the full CI pipeline locally
-ci: check test test-integration build container-build
+# Local CI pipeline (lint, test, build — no container)
+ci: check test test-integration build
 
-# Run everything (format + CI pipeline)
-all: fmt ci
+# Full CI pipeline including the container build
+ci-full: ci container-build
+
+# Run everything (format + full CI pipeline)
+all: fmt ci-full
+
+# Export Grafana dashboards tagged 'auto-water' to grafana-dashboards/.
+# Strips Grafana-assigned id/version so re-saves don't churn the diff.
+# (Mirrors homelab's backup-grafana; Bitwarden vault must be unlocked.)
+backup-grafana:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    GRAFANA_URL="${GRAFANA_URL:-https://grafana.vingilot.internal}"
+    GRAFANA_USER="${GRAFANA_USER:-admin}"
+    GRAFANA_PASSWORD=$(bw get password grafana-admin)
+    OUTDIR="grafana-dashboards"
+    mkdir -p "$OUTDIR"
+    UIDS=$(curl -fsS -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
+        "$GRAFANA_URL/api/search?type=dash-db&tag=auto-water" | jq -r '.[].uid')
+    if [[ -z "$UIDS" ]]; then
+        echo "No dashboards tagged 'auto-water' found."
+        exit 0
+    fi
+    count=0
+    for uid in $UIDS; do
+        curl -fsS -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
+            "$GRAFANA_URL/api/dashboards/uid/$uid" | \
+            jq '.dashboard | del(.id, .version)' > "$OUTDIR/${uid}.json"
+        echo "  ✓ ${uid}.json"
+        count=$((count + 1))
+    done
+    echo
+    echo "Exported $count dashboard(s) to $OUTDIR/"
