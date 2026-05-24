@@ -6,9 +6,9 @@ container_cli := env("CONTAINER_CLI", "podman")
 default:
     @just --list
 
-# Start local development environment
+# Run the poller locally (stdout sink, no hardware) — Ctrl-C to stop
 dev:
-    cd src/poc && flask run --reload
+    cd src/poc && SINK=stdout python -m auto_water
 
 # Compile/bundle source code (syntax check for Python)
 build:

@@ -1,9 +1,10 @@
+# auto-water sensor poller. Target platform: linux/arm64 (Raspberry Pi 5).
 # Build stage
 FROM docker.io/library/python:3.12-bookworm AS builder
 
 WORKDIR /src
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY requirements.txt requirements-hw.txt ./
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt -r requirements-hw.txt
 
 # Runtime stage
 FROM docker.io/library/python:3.12-slim-bookworm
@@ -12,13 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=builder /install /usr/local
 WORKDIR /app
-COPY . .
+COPY auto_water ./auto_water
 
 RUN useradd -u 1000 appuser
 USER appuser
 
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-EXPOSE 5000
+ENV PYTHONUNBUFFERED=1
 
-CMD ["flask", "run"]
+# GPIO / I²C / 1-Wire device access is granted at runtime by the k8s
+# securityContext (device mounts / privileged) — the image itself is plain.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD ["python", "-m", "auto_water.health"]
+
+CMD ["python", "-m", "auto_water"]
