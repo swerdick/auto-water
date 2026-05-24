@@ -1,3 +1,5 @@
+import logging
+
 from auto_water.models import Reading
 from auto_water.poller import Poller
 from auto_water.sensors.base import SensorError
@@ -80,13 +82,16 @@ def test_poll_once_buffers_on_sink_failure_then_flushes():
     assert len(sink.batches[0]) == 2
 
 
-def test_buffer_is_bounded():
+def test_buffer_is_bounded_and_warns_on_drop(caplog):
     sink = FakeSink(fail_times=100)
     poller = Poller([FakeSensor("s", [_reading()])], sink, interval=0.0, heartbeat=FakeHeartbeat(), buffer_max=3)
-    for _ in range(10):
-        poller.poll_once()
+    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+        for _ in range(10):
+            poller.poll_once()
     # Internal buffer never exceeds the cap even though every write failed.
     assert len(poller._buffer) == 3  # noqa: SLF001 - asserting the bound directly
+    # Operators are warned that readings are being discarded.
+    assert "retry buffer full" in caplog.text
 
 
 def test_run_stops_and_closes_sink():

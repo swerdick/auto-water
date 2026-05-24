@@ -47,7 +47,15 @@ def build_sensors(config: Config) -> list[Sensor]:
         logger.info("enabled %d DS18B20 probe(s)", sum(1 for s in sensors if "ds18b20" in s.sensor_id))
 
     if config.resistive.enabled:
-        from gpiozero import DigitalInputDevice
+        try:
+            from gpiozero import DigitalInputDevice
+        except ImportError as exc:
+            raise RuntimeError(
+                "RESISTIVE_ENABLED is set but gpiozero is not installed. gpiozero "
+                "(plus its lgpio backend and the liblgpio system library) is deferred "
+                "from the image until the resistive-sensor / actuation phase — add it "
+                "to requirements-hw.txt + the Containerfile to enable this sensor."
+            ) from exc
 
         from .resistive import ResistiveMoistureSensor
 

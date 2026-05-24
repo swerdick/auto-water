@@ -2,18 +2,26 @@ from auto_water.config import Config
 
 
 def test_defaults_when_env_unset(monkeypatch):
-    # Ensure none of our app's env vars leak in from the runner.
+    # Clear every env var Config.from_env reads, so a value present in the
+    # runner's environment can't make this defaults test flaky.
     for key in (
         "POLL_INTERVAL_SECONDS",
+        "LOG_LEVEL",
         "SINK",
         "DATABASE_URL",
+        "HEARTBEAT_PATH",
         "BUFFER_MAX",
+        "HDC302X_ENABLED",
+        "HDC302X_ADDRESS",
+        "HDC302X_SENSOR_ID",
         "BH1750_ENABLED",
         "BH1750_ADDRESS",
-        "HDC302X_ADDRESS",
+        "BH1750_SENSOR_ID",
+        "DS18B20_ENABLED",
         "RESISTIVE_ENABLED",
         "RESISTIVE_GPIO_PIN",
         "RESISTIVE_DRY_WHEN_HIGH",
+        "RESISTIVE_SENSOR_ID",
     ):
         monkeypatch.delenv(key, raising=False)
     config = Config.from_env()

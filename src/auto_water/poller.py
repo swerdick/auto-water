@@ -44,12 +44,24 @@ class Poller:
         for sensor in self._sensors:
             try:
                 readings.extend(sensor.read())
-            except Exception:  # noqa: BLE001 - one bad sensor must not stop the rest
+            except Exception:  # noqa: BLE001 - deliberate: one sensor must not stop the others
+                # Broad on purpose for an unattended device — a single sensor's
+                # failure (including unexpected bugs) must not kill the loop or
+                # the watering logic. logger.exception records the full traceback,
+                # so genuine bugs stay loud in the logs; they're just not fatal.
                 logger.exception("sensor %s read failed", getattr(sensor, "sensor_id", "?"))
         return readings
 
     def poll_once(self) -> None:
-        self._buffer.extend(self.collect())
+        new = self.collect()
+        maxlen = self._buffer.maxlen
+        if maxlen and len(self._buffer) + len(new) > maxlen:
+            logger.warning(
+                "retry buffer full (max %d) — dropping %d oldest reading(s); sink unreachable",
+                maxlen,
+                len(self._buffer) + len(new) - maxlen,
+            )
+        self._buffer.extend(new)
         if self._buffer:
             try:
                 self._sink.write(list(self._buffer))
