@@ -1,0 +1,30 @@
+# VCS / IDE / OS
+.git/
+.gitignore
+.github/
+.idea/
+.vscode/
+.DS_Store
+
+# Python envs and caches
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Not part of the runtime image
+tests/
+deploy/
+grafana-dashboards/
+requirements-dev.txt
+pyproject.toml
+justfile
+compose.yaml
+.dockerignore
+*.md

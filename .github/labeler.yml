@@ -1,0 +1,39 @@
+# Path-based PR labeling for actions/labeler@v6
+# Labels must exist on the repo — create them once via:
+#   gh label create app --color 0E8A16
+#   gh label create ci --color FBCA04
+#   gh label create container --color 0db7ed
+#   gh label create deploy --color 5319e7
+#   gh label create docs --color 0075CA
+#   gh label create breaking --color b60205
+
+app:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**"
+          - "tests/**"
+          - "pyproject.toml"
+          - "requirements*.txt"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "justfile"
+
+container:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "Containerfile"
+          - "compose.yaml"
+          - ".dockerignore"
+
+deploy:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "deploy/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"

@@ -1,0 +1,43 @@
+# Local dev: Postgres + a one-shot migrate + the poller, so the DB write path,
+# migrations, and heartbeat can be smoke-tested without a Pi. No sensors are
+# enabled here (no hardware in compose) so the poller idles and just beats its
+# heartbeat. On the Pi, sensors are enabled via env (BH1750_ENABLED=1, ...) plus
+# device mounts — see deploy/. The `migrate` service mirrors the k8s initContainer.
+services:
+  postgres:
+    image: docker.io/library/postgres:18-trixie
+    environment:
+      POSTGRES_USER: autowater
+      POSTGRES_PASSWORD: autowater
+      POSTGRES_DB: autowater
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autowater"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  migrate:
+    build:
+      context: .
+      dockerfile: Containerfile
+    command: ["python", "-m", "auto_water.migrate", "up"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://autowater:autowater@postgres:5432/autowater
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      SINK: postgres
+      DATABASE_URL: postgresql://autowater:autowater@postgres:5432/autowater
+      POLL_INTERVAL_SECONDS: "10"
