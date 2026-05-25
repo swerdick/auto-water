@@ -48,6 +48,14 @@ spec:
           securityContext:
             privileged: true
             runAsUser: 0
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            # Generous backstop — the ~30-day in-memory retry buffer is only
+            # ~50-65 MB, so this rarely matters; OOM here means start fresh.
+            limits:
+              memory: 1Gi
           env:
             - name: SINK
               value: postgres
@@ -58,6 +66,8 @@ spec:
             - name: DS18B20_ENABLED
               value: "1"
             - name: POLL_INTERVAL_SECONDS
+              value: "30"
+            - name: BUFFER_RETENTION_DAYS
               value: "30"
             - name: DATABASE_URL
               valueFrom:

@@ -11,6 +11,7 @@ def test_defaults_when_env_unset(monkeypatch):
         "DATABASE_URL",
         "HEARTBEAT_PATH",
         "BUFFER_MAX",
+        "BUFFER_RETENTION_DAYS",
         "HDC302X_ENABLED",
         "HDC302X_ADDRESS",
         "HDC302X_SENSOR_ID",
@@ -33,6 +34,8 @@ def test_defaults_when_env_unset(monkeypatch):
     assert config.hdc302x.address == 0x44
     assert config.resistive.gpio_pin == 17
     assert config.resistive.dry_when_high is True
+    assert config.buffer_retention_days == 30.0
+    assert config.buffer_max == 500_000
 
 
 def test_from_env_reads_core_values(monkeypatch):

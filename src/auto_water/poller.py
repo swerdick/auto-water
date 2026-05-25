@@ -4,6 +4,7 @@ import logging
 import threading
 import time
 from collections import deque
+from datetime import UTC, datetime, timedelta
 
 from .health import Heartbeat
 from .models import Reading
@@ -18,9 +19,16 @@ class Poller:
 
     Resilience properties:
       * one failing sensor never stops the others (errors are logged, skipped);
-      * a failing sink never loses data immediately — readings accumulate in a
-        bounded in-memory buffer and flush on the next successful write;
+      * a failing sink never loses data immediately — readings accumulate in an
+        in-memory retry buffer and flush on the next successful write. The buffer
+        is bounded primarily by a **time window** (``retention_seconds``, e.g. 30
+        days) so it rides out an extended sink outage (gondor off during a trip),
+        with a hard count cap (``buffer_max``) as a memory backstop.
       * a wedged loop is caught by the heartbeat → liveness probe → pod restart.
+
+    NB: the buffer is **in-memory only** — it's lost on a pod restart. It reliably
+    covers nightly/multi-day outages; a durable on-disk store (SQLite on a PVC) is
+    the proper multi-week solution and is tracked on the homelab ROADMAP.
     """
 
     def __init__(
@@ -30,13 +38,15 @@ class Poller:
         *,
         interval: float,
         heartbeat: Heartbeat,
-        buffer_max: int = 10000,
+        buffer_max: int = 500_000,
+        retention_seconds: float | None = None,
     ) -> None:
         self._sensors = list(sensors)
         self._sink = sink
         self._interval = interval
         self._heartbeat = heartbeat
         self._buffer: deque[Reading] = deque(maxlen=buffer_max)
+        self._retention = timedelta(seconds=retention_seconds) if retention_seconds else None
         self._stop = threading.Event()
 
     def collect(self) -> list[Reading]:
@@ -57,11 +67,11 @@ class Poller:
         maxlen = self._buffer.maxlen
         if maxlen and len(self._buffer) + len(new) > maxlen:
             logger.warning(
-                "retry buffer full (max %d) — dropping %d oldest reading(s); sink unreachable",
+                "retry buffer hit its hard cap (%d) — dropping oldest; sink unreachable",
                 maxlen,
-                len(self._buffer) + len(new) - maxlen,
             )
         self._buffer.extend(new)
+        self._evict_expired()
         if self._buffer:
             try:
                 self._sink.write(list(self._buffer))
@@ -69,6 +79,25 @@ class Poller:
             except Exception:  # noqa: BLE001 - keep buffered, retry next cycle
                 logger.warning("sink write failed; buffering %d reading(s)", len(self._buffer))
         self._heartbeat.touch()
+
+    def _evict_expired(self) -> None:
+        """Drop buffered readings older than the retention window. Only bites when
+        the sink has been unreachable longer than the window — normally the buffer
+        is flushed (and empty) every cycle, so this is a no-op."""
+        if self._retention is None:
+            return
+        cutoff = datetime.now(UTC) - self._retention
+        dropped = 0
+        while self._buffer and self._buffer[0].recorded_at < cutoff:
+            self._buffer.popleft()
+            dropped += 1
+        if dropped:
+            logger.warning(
+                "dropped %d buffered reading(s) older than the %s retention window "
+                "(sink unreachable that long)",
+                dropped,
+                self._retention,
+            )
 
     def stop(self) -> None:
         self._stop.set()

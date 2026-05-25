@@ -27,6 +27,7 @@ def main() -> None:
         interval=config.poll_interval_seconds,
         heartbeat=heartbeat,
         buffer_max=config.buffer_max,
+        retention_seconds=config.buffer_retention_days * 86400,
     )
 
     def _handle_signal(signum: int, _frame: FrameType | None) -> None:

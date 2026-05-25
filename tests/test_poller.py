@@ -1,4 +1,5 @@
 import logging
+from datetime import UTC, datetime, timedelta
 
 from auto_water.models import Reading
 from auto_water.poller import Poller
@@ -88,10 +89,22 @@ def test_buffer_is_bounded_and_warns_on_drop(caplog):
     with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
         for _ in range(10):
             poller.poll_once()
-    # Internal buffer never exceeds the cap even though every write failed.
+    # The hard count cap holds even though every write failed.
     assert len(poller._buffer) == 3  # noqa: SLF001 - asserting the bound directly
     # Operators are warned that readings are being discarded.
-    assert "retry buffer full" in caplog.text
+    assert "hard cap" in caplog.text
+
+
+def test_buffer_evicts_readings_older_than_retention(caplog):
+    # A reading already older than the retention window, with the sink down.
+    old = Reading("s", "temperature", 1.0, "celsius", recorded_at=datetime.now(UTC) - timedelta(seconds=120))
+    sink = FakeSink(fail_times=100)
+    poller = Poller([FakeSensor("s", [old])], sink, interval=0.0, heartbeat=FakeHeartbeat(), retention_seconds=60)
+    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+        poller.poll_once()
+    # The 2-minute-old reading exceeds the 60s window → evicted, not retained.
+    assert len(poller._buffer) == 0  # noqa: SLF001 - asserting the time bound directly
+    assert "retention window" in caplog.text
 
 
 def test_run_stops_and_closes_sink():

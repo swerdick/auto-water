@@ -111,9 +111,13 @@ class Config:
     sink: str = "stdout"  # "stdout" | "postgres"
     database_url: str | None = None
     heartbeat_path: str = _DEFAULT_HEARTBEAT_PATH
-    # Cap on the retry buffer (readings held in memory while the sink is
-    # unreachable, e.g. during gondor's nightly downtime). Oldest drop first.
-    buffer_max: int = 10000
+    # Retry buffer: readings held in memory while the sink is unreachable (e.g.
+    # gondor's nightly downtime or an extended trip). Bounded primarily by a time
+    # window (buffer_retention_days); buffer_max is a hard count cap / memory
+    # backstop. Both drop oldest first. In-memory only — lost on a pod restart;
+    # a durable on-disk store is the proper multi-week answer (homelab ROADMAP).
+    buffer_retention_days: float = 30.0
+    buffer_max: int = 500_000
     hdc302x: HDC302xConfig = field(default_factory=HDC302xConfig)
     bh1750: BH1750Config = field(default_factory=BH1750Config)
     ds18b20: DS18B20Config = field(default_factory=DS18B20Config)
@@ -127,7 +131,8 @@ class Config:
             sink=_str("SINK", "stdout"),
             database_url=_str("DATABASE_URL", None),
             heartbeat_path=_str("HEARTBEAT_PATH", _DEFAULT_HEARTBEAT_PATH),
-            buffer_max=_int("BUFFER_MAX", 10000),
+            buffer_retention_days=_float("BUFFER_RETENTION_DAYS", 30.0),
+            buffer_max=_int("BUFFER_MAX", 500_000),
             hdc302x=HDC302xConfig.from_env(),
             bh1750=BH1750Config.from_env(),
             ds18b20=DS18B20Config.from_env(),
