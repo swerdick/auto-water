@@ -21,3 +21,18 @@ spec:
     initdb:
       database: autowater
       owner: autowater
+  # Expose the read-write endpoint on a stable LAN IP via MetalLB so GUI
+  # clients (DataGrip) can connect without a kubectl port-forward. CNPG owns
+  # the service (correct primary selector + lifecycle).
+  managed:
+    services:
+      additional:
+        - selectorType: rw
+          serviceTemplate:
+            metadata:
+              name: auto-water-db-lb
+              annotations:
+                metallb.universe.tf/address-pool: general-pool
+                metallb.universe.tf/loadBalancerIPs: "192.168.1.221"
+            spec:
+              type: LoadBalancer
