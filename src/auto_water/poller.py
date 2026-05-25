@@ -4,6 +4,7 @@ import logging
 import threading
 import time
 from collections import deque
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from .health import Heartbeat
@@ -50,6 +51,14 @@ class Poller:
         self._stop = threading.Event()
 
     def collect(self) -> list[Reading]:
+        # Stamp the whole cycle with one timestamp. Sensors are read
+        # sequentially and a 1-Wire bus with several DS18B20 probes can spread
+        # those reads over seconds, but collapsing a cycle onto a single time
+        # means same-cadence series share an x-axis: Grafana then draws multiple
+        # probes as continuous lines instead of isolated dots, and a sensor that
+        # drops out shows as an honest gap rather than being papered over. The
+        # few seconds of intra-cycle read spread is irrelevant for these metrics.
+        cycle_at = datetime.now(UTC)
         readings: list[Reading] = []
         for sensor in self._sensors:
             try:
@@ -60,7 +69,7 @@ class Poller:
                 # the watering logic. logger.exception records the full traceback,
                 # so genuine bugs stay loud in the logs; they're just not fatal.
                 logger.exception("sensor %s read failed", getattr(sensor, "sensor_id", "?"))
-        return readings
+        return [replace(r, recorded_at=cycle_at) for r in readings]
 
     def poll_once(self) -> None:
         new = self.collect()

@@ -60,13 +60,29 @@ def test_collect_isolates_failing_sensor():
 
 
 def test_poll_once_writes_and_touches_heartbeat():
-    reading = _reading()
     sink = FakeSink()
     hb = FakeHeartbeat()
-    poller = Poller([FakeSensor("s", [reading])], sink, interval=0.0, heartbeat=hb)
+    poller = Poller([FakeSensor("s", [_reading()])], sink, interval=0.0, heartbeat=hb)
     poller.poll_once()
-    assert sink.batches == [[reading]]
+    # collect() re-stamps each cycle, so compare the stable fields, not identity.
+    assert len(sink.batches) == 1
+    [written] = sink.batches[0]
+    assert (written.sensor_id, written.metric, written.value) == ("s", "temperature", 1.0)
     assert hb.touches == 1
+
+
+def test_collect_stamps_one_timestamp_per_cycle():
+    # Sensors are read sequentially and arrive with different construction times
+    # (a slow 1-Wire bus can spread reads over seconds); collect() must collapse
+    # the cycle onto a single fresh timestamp so multi-series panels render as
+    # continuous lines rather than dots.
+    t0 = datetime(2020, 1, 1, tzinfo=UTC)
+    a = FakeSensor("a", [Reading("a", "temperature", 1.0, "celsius", recorded_at=t0)])
+    b = FakeSensor("b", [Reading("b", "temperature", 2.0, "celsius", recorded_at=t0 + timedelta(seconds=3))])
+    readings = _poller([a, b], FakeSink()).collect()
+    stamps = {r.recorded_at for r in readings}
+    assert len(stamps) == 1  # one cycle → one timestamp
+    assert t0 not in stamps  # and it's the cycle's own time, not the sensors'
 
 
 def test_poll_once_buffers_on_sink_failure_then_flushes():
@@ -96,10 +112,13 @@ def test_buffer_is_bounded_and_warns_on_drop(caplog):
 
 
 def test_buffer_evicts_readings_older_than_retention(caplog):
-    # A reading already older than the retention window, with the sink down.
+    # A reading already older than the retention window, sitting in the buffer
+    # with the sink down. Injected straight into the buffer: collect() stamps
+    # each cycle with a fresh time, so we age the buffer directly here.
     old = Reading("s", "temperature", 1.0, "celsius", recorded_at=datetime.now(UTC) - timedelta(seconds=120))
     sink = FakeSink(fail_times=100)
-    poller = Poller([FakeSensor("s", [old])], sink, interval=0.0, heartbeat=FakeHeartbeat(), retention_seconds=60)
+    poller = Poller([], sink, interval=0.0, heartbeat=FakeHeartbeat(), retention_seconds=60)
+    poller._buffer.append(old)  # noqa: SLF001 - seeding the buffer to exercise eviction
     with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
         poller.poll_once()
     # The 2-minute-old reading exceeds the 60s window → evicted, not retained.
