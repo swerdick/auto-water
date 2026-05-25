@@ -41,7 +41,7 @@ jobs:
         with:
           platforms: arm64
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # Build-only sanity check on the real target arch (under QEMU). The
       # deploy workflow does the same build with push:true on merge to main.
