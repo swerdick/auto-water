@@ -1,0 +1,23 @@
+# CloudNativePG cluster for auto-water's sensor readings.
+#
+# imageName is intentionally omitted so the cluster uses the operator's default
+# operand image (PostgreSQL 18.x on the homelab's CNPG 1.29) — guaranteed
+# compatible with the running operator and keeps new clusters on PG18. Immich
+# stays on its own pinned PG16 image; one operator serves both.
+#
+# CNPG generates a `auto-water-db-app` Secret containing a ready-to-use `uri`
+# connection string for the `autowater` database — the Deployment reads it.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: auto-water-db
+  namespace: auto-water
+spec:
+  instances: 1
+  storage:
+    size: 5Gi
+    storageClass: nfs-scratch
+  bootstrap:
+    initdb:
+      database: autowater
+      owner: autowater
