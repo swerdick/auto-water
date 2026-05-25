@@ -1,0 +1,75 @@
+# Loaded by the kube-prometheus-stack grafana dashboard sidecar (NAMESPACE=ALL),
+# so this app-owned ConfigMap is picked up even though Grafana runs in the
+# monitoring namespace. Tagged "auto-water" so `just backup-grafana` round-trips
+# any UI edits back into grafana-dashboards/.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auto-water-dashboard
+  namespace: auto-water
+  labels:
+    grafana_dashboard: "1"
+data:
+  auto-water.json: |
+    {
+      "uid": "auto-water",
+      "title": "Auto-Water Sensors",
+      "tags": ["auto-water"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "refresh": "30s",
+      "time": { "from": "now-6h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Illuminance",
+          "type": "timeseries",
+          "datasource": { "type": "postgres", "uid": "autowaterpg" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "lux", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "postgres", "uid": "autowaterpg" },
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT recorded_at AS \"time\", value FROM readings WHERE metric = 'illuminance' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Temperature",
+          "type": "timeseries",
+          "datasource": { "type": "postgres", "uid": "autowaterpg" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "celsius", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "postgres", "uid": "autowaterpg" },
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT recorded_at AS \"time\", sensor_id AS metric, value FROM readings WHERE metric = 'temperature' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Humidity",
+          "type": "timeseries",
+          "datasource": { "type": "postgres", "uid": "autowaterpg" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "humidity", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "postgres", "uid": "autowaterpg" },
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT recorded_at AS \"time\", value FROM readings WHERE metric = 'humidity' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
+            }
+          ]
+        }
+      ]
+    }
