@@ -22,7 +22,7 @@ spec:
       nodeSelector:
         homelab.vingilot.internal/host: samwise
       tolerations:
-        - key: role
+        - key: homelab.vingilot.internal/role
           operator: Equal
           value: pi
           effect: NoSchedule
