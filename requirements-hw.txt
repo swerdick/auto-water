@@ -1,18 +1,15 @@
 # Hardware-interface libraries — installed in the container / on the Pi only.
-# Deliberately kept OUT of requirements.txt so `just test` and laptop dev
-# installs stay clean: Blinka's `import board` expects a real Raspberry Pi, and
-# the app imports all of these lazily (only in sensors/factory.py), so nothing
-# here is needed to run the test suite.
+# Kept OUT of requirements.txt so `just test` and laptop dev stay clean (Blinka's
+# `import board` expects a real Pi; the app imports these lazily in factory.py).
 #
-# Digital sensors only (I²C + 1-Wire) — what the POC actually deploys:
+# Digital sensors (I²C + 1-Wire) — what the POC actually deploys:
 adafruit-blinka                 # board/busio for the I²C bus
 adafruit-circuitpython-hdc302x  # HDC3022 temperature + humidity
 adafruit-circuitpython-bh1750   # BH1750 ambient light
 w1thermsensor                   # DS18B20 soil-temperature probes (1-Wire)
+lgpio                           # REQUIRED by Blinka's board module on the Pi 5 (bcm2712),
+                                # even for pure I²C. No Debian pkg / wheel — the lg C lib
+                                # is built from source in the Containerfile.
 #
-# Deferred until the resistive soil sensor / pump actuation phase: gpiozero's
-# Pi 5 backend is lgpio, which has no wheel and links against the liblgpio C
-# library (not in Debian's repos) — add these with the matching system deps
-# (swig + liblgpio) when GPIO digital-in / output is actually used:
-#   gpiozero
-#   lgpio
+# Deferred until the resistive soil sensor / pump actuation phase:
+#   gpiozero   (its Pi 5 backend is lgpio, which is already present above)
