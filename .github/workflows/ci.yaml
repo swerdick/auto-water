@@ -46,7 +46,7 @@ jobs:
       # Build-only sanity check on the real target arch (under QEMU). The
       # deploy workflow does the same build with push:true on merge to main.
       - name: Build image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Containerfile
