@@ -23,7 +23,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: requirements-dev.txt
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
