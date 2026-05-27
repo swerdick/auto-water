@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - postgres-cluster.yaml
+  - postgres-podmonitor.yaml
   - deployment.yaml
   - grafana-dashboard.yaml
