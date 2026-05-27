@@ -14,6 +14,12 @@ metadata:
   namespace: auto-water
 spec:
   instances: 1
+  # PodMonitor for the instance metrics endpoint (:9187) so the homelab's
+  # kube-prometheus-stack scrapes it and the CNPG Grafana dashboard populates.
+  # Opt-in per cluster — the operator won't create it by default. (Added
+  # 2026-05-27 alongside the same flag on the homelab's immich/harbor clusters.)
+  monitoring:
+    enablePodMonitor: true
   storage:
     size: 5Gi
     storageClass: nfs-scratch
