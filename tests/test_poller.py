@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from auto_water.models import Reading
 from auto_water.poller import Poller
 from auto_water.sensors.base import SensorError
+from auto_water.spill import SpillStore
 
 
 class FakeSensor:
@@ -151,3 +152,73 @@ def test_run_with_no_sensors_idles_without_error():
     poller.stop()  # stop before entering the loop
     poller.run()
     assert sink.closed is True
+
+
+# --- durable spill -----------------------------------------------------------
+
+
+def test_spill_survives_restart_and_flushes(tmp_path):
+    path = str(tmp_path / "spill.db")
+    sensor = FakeSensor("s", [_reading()])
+
+    # First process: sink down for two cycles → 2 readings in memory AND on disk.
+    down = _poller([sensor], FakeSink(fail_times=100), spill=SpillStore(path))
+    down.poll_once()
+    down.poll_once()
+    assert len(SpillStore(path).load()) == 2
+
+    # "Pod restart": a fresh poller on the same file restores the 2 spilled
+    # readings, and the first successful write flushes restored + new together.
+    sink = FakeSink()
+    up = _poller([sensor], sink, spill=SpillStore(path))
+    up.poll_once()
+    assert len(sink.batches) == 1
+    assert len(sink.batches[0]) == 3
+    # Flush empties the file — nothing left for a later restart to re-insert.
+    assert SpillStore(path).load() == []
+
+
+def test_spill_untouched_while_sink_healthy(tmp_path):
+    path = str(tmp_path / "spill.db")
+    poller = _poller([FakeSensor("s", [_reading()])], FakeSink(), spill=SpillStore(path))
+    poller.poll_once()
+    poller.poll_once()
+    assert SpillStore(path).load() == []
+
+
+def test_spill_prunes_with_retention(tmp_path):
+    path = str(tmp_path / "spill.db")
+    old = Reading("s", "temperature", 1.0, "celsius", recorded_at=datetime.now(UTC) - timedelta(seconds=120))
+    seed = SpillStore(path)
+    seed.append([old])
+    seed.close()
+
+    # Restart mid-outage: the stale reading is restored, then evicted from
+    # memory AND pruned from disk on the next failed cycle.
+    poller = _poller(
+        [FakeSensor("s", [_reading()])],
+        FakeSink(fail_times=100),
+        retention_seconds=60,
+        spill=SpillStore(path),
+    )
+    poller.poll_once()
+    remaining = SpillStore(path).load()
+    assert len(remaining) == 1  # just this cycle's reading; the expired one is gone
+    assert remaining[0].recorded_at > datetime.now(UTC) - timedelta(seconds=60)
+
+
+def test_broken_spill_degrades_to_memory_only(tmp_path, caplog):
+    # A directory as the target path makes sqlite3.connect fail → the store
+    # disables itself and the poller runs exactly as before.
+    bad_dir = tmp_path / "spill.db"
+    bad_dir.mkdir()
+    with caplog.at_level(logging.ERROR, logger="auto_water.spill"):
+        spill = SpillStore(str(bad_dir))
+    assert "spill store unavailable" in caplog.text
+
+    sink = FakeSink(fail_times=1)
+    poller = _poller([FakeSensor("s", [_reading()])], sink, spill=spill)
+    poller.poll_once()  # fails → buffers in memory, spill no-ops
+    poller.poll_once()  # recovers → flushes both readings
+    assert len(sink.batches) == 1
+    assert len(sink.batches[0]) == 2

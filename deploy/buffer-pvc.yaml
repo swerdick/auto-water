@@ -1,0 +1,17 @@
+---
+# Backing store for the poller's durable retry-buffer spill (BUFFER_SPILL_PATH).
+# local-path provisions on samwise (the pod is nodeSelector-pinned there, and
+# WaitForFirstConsumer binds the PV to wherever the pod lands). Written only
+# while the DB is unreachable, so SD-card wear stays bounded to outage windows.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auto-water-buffer
+  namespace: auto-water
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
