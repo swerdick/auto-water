@@ -19,7 +19,7 @@ class Reading:
     """
 
     sensor_id: str
-    metric: str  # "temperature" | "humidity" | "illuminance" | "soil_moisture_digital"
+    metric: str  # "temperature" | "humidity" | "illuminance" | "soil_moisture" | "soil_moisture_raw" | "soil_moisture_digital"  # noqa: E501
     value: float
-    unit: str  # "celsius" | "percent" | "lux" | "dry_bool"
+    unit: str  # "celsius" | "percent" | "lux" | "adc" | "dry_bool"
     recorded_at: datetime = field(default_factory=_utcnow)

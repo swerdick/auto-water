@@ -87,6 +87,40 @@ data:
               "rawSql": "SELECT recorded_at AS \"time\", sensor_id AS metric, value FROM readings WHERE metric = 'temperature' AND sensor_id LIKE 'ds18b20%' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
             }
           ]
+        },
+        {
+          "id": 5,
+          "title": "Soil Moisture (%)",
+          "type": "timeseries",
+          "datasource": { "type": "postgres", "uid": "autowaterpg" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "postgres", "uid": "autowaterpg" },
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT recorded_at AS \"time\", sensor_id AS metric, value FROM readings WHERE metric = 'soil_moisture' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Soil Moisture (raw ADC)",
+          "type": "timeseries",
+          "datasource": { "type": "postgres", "uid": "autowaterpg" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "drawStyle": "line", "fillOpacity": 0 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "postgres", "uid": "autowaterpg" },
+              "format": "time_series",
+              "rawQuery": true,
+              "rawSql": "SELECT recorded_at AS \"time\", sensor_id AS metric, value FROM readings WHERE metric = 'soil_moisture_raw' AND $__timeFilter(recorded_at) ORDER BY recorded_at"
+            }
+          ]
         }
       ]
     }

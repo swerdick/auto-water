@@ -1,3 +1,5 @@
+import pytest
+
 from auto_water.config import Config
 
 
@@ -19,10 +21,14 @@ def test_defaults_when_env_unset(monkeypatch):
         "BH1750_ADDRESS",
         "BH1750_SENSOR_ID",
         "DS18B20_ENABLED",
+        "DS18B20_NAMES",
+        "BUFFER_SPILL_PATH",
         "RESISTIVE_ENABLED",
         "RESISTIVE_GPIO_PIN",
         "RESISTIVE_DRY_WHEN_HIGH",
         "RESISTIVE_SENSOR_ID",
+        "ADS1115_ENABLED",
+        "ADS1115_PROBES",
     ):
         monkeypatch.delenv(key, raising=False)
     config = Config.from_env()
@@ -36,6 +42,10 @@ def test_defaults_when_env_unset(monkeypatch):
     assert config.resistive.dry_when_high is True
     assert config.buffer_retention_days == 30.0
     assert config.buffer_max == 500_000
+    assert config.ads1115.enabled is False
+    assert config.ads1115.probes == ()
+    assert config.ds18b20.names == {}
+    assert config.buffer_spill_path is None
 
 
 def test_from_env_reads_core_values(monkeypatch):
@@ -76,3 +86,59 @@ def test_resistive_sensor_config(monkeypatch):
     assert cfg.gpio_pin == 27
     assert cfg.dry_when_high is False
     assert cfg.sensor_id == "pot-a"
+
+
+def test_ads1115_probes_parse(monkeypatch):
+    monkeypatch.setenv("ADS1115_ENABLED", "1")
+    monkeypatch.setenv(
+        "ADS1115_PROBES",
+        '[{"address":"0x48","channel":0,"sensor_id":"soil_a1","dry_raw":26000,"wet_raw":12000},'
+        '{"address":73,"channel":2,"sensor_id":"soil_b1"}]',
+    )
+    cfg = Config.from_env().ads1115
+    assert cfg.enabled is True
+    assert len(cfg.probes) == 2
+    a1, b1 = cfg.probes
+    assert a1.address == 0x48
+    assert a1.channel == 0
+    assert a1.sensor_id == "soil_a1"
+    assert a1.dry_raw == 26000
+    assert a1.wet_raw == 12000
+    assert b1.address == 73  # 0x49 given as decimal
+    assert b1.dry_raw is None
+    assert b1.wet_raw is None
+
+
+def test_ads1115_probes_malformed_raises(monkeypatch):
+    monkeypatch.setenv("ADS1115_PROBES", "not json")
+    with pytest.raises(ValueError):
+        Config.from_env()
+
+
+def test_ads1115_probes_bad_channel_raises(monkeypatch):
+    monkeypatch.setenv("ADS1115_PROBES", '[{"address":"0x48","channel":7,"sensor_id":"x"}]')
+    with pytest.raises(ValueError):
+        Config.from_env()
+
+
+def test_ds18b20_names_parse(monkeypatch):
+    monkeypatch.setenv("DS18B20_NAMES", '{"3ce1d4438abc": "basil", "0316a2795e0f": "fig"}')
+    cfg = Config.from_env().ds18b20
+    assert cfg.names == {"3ce1d4438abc": "basil", "0316a2795e0f": "fig"}
+
+
+def test_ds18b20_names_malformed_raises(monkeypatch):
+    monkeypatch.setenv("DS18B20_NAMES", "not json")
+    with pytest.raises(ValueError):
+        Config.from_env()
+    monkeypatch.setenv("DS18B20_NAMES", '["a-list-not-an-object"]')
+    with pytest.raises(ValueError):
+        Config.from_env()
+    monkeypatch.setenv("DS18B20_NAMES", '{"serial": "  "}')
+    with pytest.raises(ValueError):
+        Config.from_env()
+
+
+def test_buffer_spill_path_from_env(monkeypatch):
+    monkeypatch.setenv("BUFFER_SPILL_PATH", "/data/spill.db")
+    assert Config.from_env().buffer_spill_path == "/data/spill.db"
