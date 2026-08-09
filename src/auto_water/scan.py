@@ -22,7 +22,7 @@ def _scan_i2c() -> list[int]:
 
     i2c = busio.I2C(board.SCL, board.SDA)
     while not i2c.try_lock():
-        pass
+        time.sleep(0.01)  # don't peg a core if the poller holds the bus lock
     try:
         return sorted(i2c.scan())
     finally:

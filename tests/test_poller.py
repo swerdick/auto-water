@@ -207,6 +207,23 @@ def test_spill_prunes_with_retention(tmp_path):
     assert remaining[0].recorded_at > datetime.now(UTC) - timedelta(seconds=60)
 
 
+def test_spill_pruned_to_buffer_cap_at_load(tmp_path, caplog):
+    # 5 spilled rows but a 3-slot buffer: the deque keeps the newest 3, and the
+    # file must be pruned to the same 3 at load — otherwise a later clear()
+    # would discard rows that never made it into memory or the sink.
+    path = str(tmp_path / "spill.db")
+    seed = SpillStore(path)
+    seed.append([_reading(f"s{i}") for i in range(5)])
+    seed.close()
+
+    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+        poller = _poller([], FakeSink(fail_times=100), buffer_max=3, spill=SpillStore(path))
+    assert "exceeds the buffer cap" in caplog.text
+    assert [r.sensor_id for r in poller._buffer] == ["s2", "s3", "s4"]  # noqa: SLF001
+    on_disk = SpillStore(path).load()
+    assert [r.sensor_id for r in on_disk] == ["s2", "s3", "s4"]  # disk == memory
+
+
 def test_broken_spill_degrades_to_memory_only(tmp_path, caplog):
     # A directory as the target path makes sqlite3.connect fail → the store
     # disables itself and the poller runs exactly as before.
