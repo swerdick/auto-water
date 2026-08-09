@@ -68,6 +68,9 @@ ci-full: ci container-build
 # Run everything (format + full CI pipeline)
 all: fmt ci-full
 
+forward-db:
+    kubectl -n auto-water port-forward svc/auto-water-db-rw 5432:5432
+
 # Export Grafana dashboards tagged 'auto-water' to grafana-dashboards/.
 # Strips Grafana-assigned id/version so re-saves don't churn the diff.
 # (Mirrors homelab's backup-grafana; Bitwarden vault must be unlocked.)
