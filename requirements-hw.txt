@@ -7,6 +7,7 @@ adafruit-blinka                 # board/busio for the I²C bus
 adafruit-circuitpython-hdc302x  # HDC3022 temperature + humidity
 adafruit-circuitpython-bh1750   # BH1750 ambient light
 w1thermsensor                   # DS18B20 soil-temperature probes (1-Wire)
+adafruit-circuitpython-ads1x15  # ADS1115 4-ch 16-bit ADC — capacitive soil moisture (analog→I²C)
 lgpio                           # REQUIRED by Blinka's board module on the Pi 5 (bcm2712),
                                 # even for pure I²C. No Debian pkg / wheel — the lg C lib
                                 # is built from source in the Containerfile.
