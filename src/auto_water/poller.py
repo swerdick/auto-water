@@ -56,7 +56,27 @@ class Poller:
         if spill is not None:
             # Rows stay in the file until the first successful flush, so a
             # crash between restore and flush still can't lose them.
-            self._buffer.extend(spill.load())
+            restored = spill.load()
+            if self._buffer.maxlen and len(restored) > self._buffer.maxlen:
+                # Same oldest-first drop the in-memory cap applies — but say so.
+                logger.warning(
+                    "restored spill (%d) exceeds the buffer cap (%d); dropping the oldest %d",
+                    len(restored),
+                    self._buffer.maxlen,
+                    len(restored) - self._buffer.maxlen,
+                )
+            self._buffer.extend(restored)
+            if restored:
+                # Prune the file to the same bounds memory just applied, so
+                # disk and deque stay in lockstep from the first cycle — a
+                # later clear() can then never discard rows that only ever
+                # existed on disk.
+                spill.prune(self._retention_cutoff(), self._buffer.maxlen or len(restored))
+
+    def _retention_cutoff(self) -> datetime:
+        if self._retention:
+            return datetime.now(UTC) - self._retention
+        return datetime.min.replace(tzinfo=UTC)
 
     def collect(self) -> list[Reading]:
         # Stamp the whole cycle with one timestamp. Sensors are read
@@ -102,11 +122,7 @@ class Poller:
                     # rows are already in the file — then re-apply the memory
                     # bounds so file and deque stay in lockstep.
                     self._spill.append(new)
-                    if self._retention:
-                        cutoff = datetime.now(UTC) - self._retention
-                    else:
-                        cutoff = datetime.min.replace(tzinfo=UTC)
-                    self._spill.prune(cutoff, self._buffer.maxlen or len(self._buffer))
+                    self._spill.prune(self._retention_cutoff(), self._buffer.maxlen or len(self._buffer))
         self._heartbeat.touch()
 
     def _evict_expired(self) -> None:
