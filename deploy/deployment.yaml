@@ -65,17 +65,46 @@ spec:
               value: "1"
             - name: DS18B20_ENABLED
               value: "1"
+            - name: ADS1115_ENABLED
+              value: "1"
+            # Capacitive soil-moisture probes: one JSON object per ADS1115 channel.
+            # dry_raw/wet_raw come from `python -m auto_water.scan` (dry = in air,
+            # wet = in water); until both are set a probe logs raw counts only.
+            # Up to 4 channels/board across 0x48/0x49/0x4A → 12 probes max. A probe
+            # whose board/channel isn't wired is logged-and-skipped, not fatal.
+            # Five probes = the 2026-08 planting (thunbergia deferred to spring).
+            - name: ADS1115_PROBES
+              value: |
+                [
+                  {"address": "0x48", "channel": 0, "sensor_id": "soil_basil"},
+                  {"address": "0x48", "channel": 1, "sensor_id": "soil_chives"},
+                  {"address": "0x48", "channel": 2, "sensor_id": "soil_cilantro"},
+                  {"address": "0x48", "channel": 3, "sensor_id": "soil_forgetmenot"},
+                  {"address": "0x49", "channel": 0, "sensor_id": "soil_moonflower"}
+                ]
             - name: POLL_INTERVAL_SECONDS
               value: "30"
             - name: BUFFER_RETENTION_DAYS
               value: "30"
+            # Durable spill for the retry buffer: only written while the DB is
+            # unreachable (earendil's nightly shutdown), reloaded after a pod
+            # restart. Lives on a local-path PV on samwise.
+            - name: BUFFER_SPILL_PATH
+              value: /data/spill.db
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: auto-water-db-app
                   key: uri
+          volumeMounts:
+            - name: buffer
+              mountPath: /data
           livenessProbe:
             exec:
               command: ["python", "-m", "auto_water.health"]
             initialDelaySeconds: 20
             periodSeconds: 30
+      volumes:
+        - name: buffer
+          persistentVolumeClaim:
+            claimName: auto-water-buffer

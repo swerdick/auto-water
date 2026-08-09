@@ -11,6 +11,7 @@ from .health import Heartbeat
 from .models import Reading
 from .sensors.base import Sensor
 from .sinks.base import ReadingSink
+from .spill import SpillStore
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +26,12 @@ class Poller:
         is bounded primarily by a **time window** (``retention_seconds``, e.g. 30
         days) so it rides out an extended sink outage (gondor off during a trip),
         with a hard count cap (``buffer_max``) as a memory backstop.
+      * with a ``spill`` store, the buffer is mirrored to disk on each failed
+        write and reloaded at startup, so a pod restart mid-outage doesn't drop
+        it. Healthy cycles never touch the spill (its file only sees writes
+        while the sink is down), and a broken spill degrades to the in-memory
+        behavior — never the other way around.
       * a wedged loop is caught by the heartbeat → liveness probe → pod restart.
-
-    NB: the buffer is **in-memory only** — it's lost on a pod restart. It reliably
-    covers nightly/multi-day outages; a durable on-disk store (SQLite on a PVC) is
-    the proper multi-week solution and is tracked on the homelab ROADMAP.
     """
 
     def __init__(
@@ -41,6 +43,7 @@ class Poller:
         heartbeat: Heartbeat,
         buffer_max: int = 500_000,
         retention_seconds: float | None = None,
+        spill: SpillStore | None = None,
     ) -> None:
         self._sensors = list(sensors)
         self._sink = sink
@@ -48,7 +51,12 @@ class Poller:
         self._heartbeat = heartbeat
         self._buffer: deque[Reading] = deque(maxlen=buffer_max)
         self._retention = timedelta(seconds=retention_seconds) if retention_seconds else None
+        self._spill = spill
         self._stop = threading.Event()
+        if spill is not None:
+            # Rows stay in the file until the first successful flush, so a
+            # crash between restore and flush still can't lose them.
+            self._buffer.extend(spill.load())
 
     def collect(self) -> list[Reading]:
         # Stamp the whole cycle with one timestamp. Sensors are read
@@ -85,8 +93,20 @@ class Poller:
             try:
                 self._sink.write(list(self._buffer))
                 self._buffer.clear()
+                if self._spill is not None:
+                    self._spill.clear()
             except Exception:  # noqa: BLE001 - keep buffered, retry next cycle
                 logger.warning("sink write failed; buffering %d reading(s)", len(self._buffer))
+                if self._spill is not None:
+                    # Mirror only this cycle's new readings — earlier buffered
+                    # rows are already in the file — then re-apply the memory
+                    # bounds so file and deque stay in lockstep.
+                    self._spill.append(new)
+                    if self._retention:
+                        cutoff = datetime.now(UTC) - self._retention
+                    else:
+                        cutoff = datetime.min.replace(tzinfo=UTC)
+                    self._spill.prune(cutoff, self._buffer.maxlen or len(self._buffer))
         self._heartbeat.touch()
 
     def _evict_expired(self) -> None:
@@ -122,4 +142,6 @@ class Poller:
             # Wait returns early if stop() is called, so shutdown is prompt.
             self._stop.wait(timeout=max(0.0, self._interval - elapsed))
         self._sink.close()
+        if self._spill is not None:
+            self._spill.close()
         logger.info("poller stopped")

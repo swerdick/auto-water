@@ -4,5 +4,6 @@ resources:
   - namespace.yaml
   - postgres-cluster.yaml
   - postgres-podmonitor.yaml
+  - buffer-pvc.yaml
   - deployment.yaml
   - grafana-dashboard.yaml
