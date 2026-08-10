@@ -9,4 +9,4 @@ resources:
   - grafana-dashboard.yaml
 images:
   - name: ghcr.io/swerdick/auto-water
-    newTag: "0.1.0" # x-release-please-version
+    newTag: "0.2.0" # x-release-please-version
