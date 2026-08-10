@@ -7,3 +7,6 @@ resources:
   - buffer-pvc.yaml
   - deployment.yaml
   - grafana-dashboard.yaml
+images:
+  - name: ghcr.io/swerdick/auto-water
+    newTag: "0.1.0" # x-release-please-version

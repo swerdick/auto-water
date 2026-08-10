@@ -13,6 +13,26 @@ Refer to `../project-hub/auto-water/` for architectural documents.
 
 - Always run `just ci` before pushing a commit (or `just ci-full` to also build the container image).
 
+## Commits & Release
+
+Use conventional commits (`type(scope): description` — feat, fix, refactor,
+build, ci, docs, test, chore). Releases are managed by release-please
+(single repo-wide version, manifest mode).
+
+- Merges to `main` accumulate on an auto-maintained release PR; merging that
+  PR tags `vX.Y.Z`, creates a GitHub release, and triggers the only automatic
+  production deploy: the arm64 image is built and pushed to GHCR tagged with
+  the plain semver + `latest`, and the release commit pins that tag in
+  `deploy/kustomization.yaml`, so Flux rolls the deployment on samwise.
+- Regular merges to `main` do NOT deploy. Manual redeploy/rebuild: run
+  `deploy.yaml` via workflow_dispatch with the `image-tag` input (select the
+  matching `vX.Y.Z` tag under "Use workflow from" to rebuild that release).
+- Only `feat`/`fix`/breaking commits create or bump the release PR. To force
+  a version, add a `Release-As: X.Y.Z` footer to a commit body.
+- After a release merge, Flux may briefly race the ~5-minute arm64 build: a
+  transient ImagePullBackOff on the pod resolves itself once the push
+  completes (the spill buffer preserves unsent readings across the restart).
+
 ## Containers
 
 - Use `Containerfile` (not Dockerfile) — OCI standard naming.
