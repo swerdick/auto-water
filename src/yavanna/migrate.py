@@ -9,7 +9,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-_MIGRATIONS_PACKAGE = "auto_water.migrations"
+_MIGRATIONS_PACKAGE = "yavanna.migrations"
 _NAME_RE = re.compile(r"^(\d+)_(.+)\.(up|down)\.sql$")
 
 _MIGRATIONS_TABLE = """
@@ -29,7 +29,7 @@ class Migration:
 
 
 def load_migrations() -> list[Migration]:
-    """Parse ``NNN_name.{up,down}.sql`` files embedded in ``auto_water.migrations``,
+    """Parse ``NNN_name.{up,down}.sql`` files embedded in ``yavanna.migrations``,
     pair them by integer version, and return them sorted ascending."""
     ups: dict[int, str] = {}
     downs: dict[int, str] = {}
@@ -115,7 +115,7 @@ def _main(argv: list[str] | None = None) -> int:
     from .config import Config
     from .logging_config import configure_logging
 
-    parser = argparse.ArgumentParser(prog="auto_water.migrate")
+    parser = argparse.ArgumentParser(prog="yavanna.migrate")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("up", help="apply pending migrations")
     down = sub.add_parser("down", help="roll back migrations")

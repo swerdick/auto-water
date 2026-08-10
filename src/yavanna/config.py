@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 # Heartbeat lives on the container's ephemeral filesystem; the k8s liveness
 # probe reads it. /tmp is intentional here, not a tempfile-security concern.
-_DEFAULT_HEARTBEAT_PATH = "/tmp/auto-water-healthy"  # noqa: S108  # nosec B108
+_DEFAULT_HEARTBEAT_PATH = "/tmp/yavanna-healthy"  # noqa: S108  # nosec B108
 
 
 def _str(name: str, default: str | None) -> str | None:
@@ -142,7 +142,7 @@ class ADS1115ProbeConfig:
     """One capacitive soil probe: a channel on an ADS1115 at a given I²C address.
 
     dry_raw/wet_raw are calibration counts captured with ``python -m
-    auto_water.scan`` (dry = in air, wet = in water). When both are set and
+    yavanna.scan`` (dry = in air, wet = in water). When both are set and
     differ, the probe also emits a 0-100 % ``soil_moisture`` reading; otherwise
     only the raw ``soil_moisture_raw`` count is logged.
     """

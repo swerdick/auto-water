@@ -16,7 +16,7 @@ from .spill import SpillStore
 def main() -> None:
     config = Config.from_env()
     configure_logging(config.log_level)
-    logger = logging.getLogger("auto_water")
+    logger = logging.getLogger("yavanna")
 
     sensors = build_sensors(config)
     sink = build_sink(config)

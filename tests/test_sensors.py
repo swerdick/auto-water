@@ -4,14 +4,14 @@ import types
 
 import pytest
 
-from auto_water.config import BH1750Config, Config, DS18B20Config
-from auto_water.sensors import factory
-from auto_water.sensors.ads1115 import ADS1115Channel, _to_percent
-from auto_water.sensors.base import SensorError
-from auto_water.sensors.bh1750 import BH1750Sensor
-from auto_water.sensors.ds18b20 import DS18B20Sensor
-from auto_water.sensors.hdc302x import HDC302xSensor
-from auto_water.sensors.resistive import ResistiveMoistureSensor
+from yavanna.config import BH1750Config, Config, DS18B20Config
+from yavanna.sensors import factory
+from yavanna.sensors.ads1115 import ADS1115Channel, _to_percent
+from yavanna.sensors.base import SensorError
+from yavanna.sensors.bh1750 import BH1750Sensor
+from yavanna.sensors.ds18b20 import DS18B20Sensor
+from yavanna.sensors.hdc302x import HDC302xSensor
+from yavanna.sensors.resistive import ResistiveMoistureSensor
 
 
 class FakeLux:
@@ -182,7 +182,7 @@ def test_build_sensors_survives_i2c_bus_failure(monkeypatch, caplog):
         bh1750=BH1750Config(enabled=True),
         ds18b20=DS18B20Config(enabled=True),
     )
-    with caplog.at_level(logging.ERROR, logger="auto_water.sensors.factory"):
+    with caplog.at_level(logging.ERROR, logger="yavanna.sensors.factory"):
         sensors = factory.build_sensors(config)
     # The dead bus takes out the I2C sensors in one step; 1-Wire still runs.
     assert [s.sensor_id for s in sensors] == ["ds18b20_aaa"]
@@ -193,7 +193,7 @@ def test_build_sensors_survives_i2c_bus_failure(monkeypatch, caplog):
 def test_build_sensors_i2c_failure_with_only_i2c_sensors_returns_empty(monkeypatch, caplog):
     monkeypatch.setattr(factory, "_make_i2c", _raise_bus_error)
     config = Config(bh1750=BH1750Config(enabled=True))
-    with caplog.at_level(logging.ERROR, logger="auto_water.sensors.factory"):
+    with caplog.at_level(logging.ERROR, logger="yavanna.sensors.factory"):
         sensors = factory.build_sensors(config)
     # Empty list → the poller's existing idle-and-heartbeat path, not a crash.
     assert sensors == []

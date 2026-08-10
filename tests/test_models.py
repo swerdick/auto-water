@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from auto_water.models import Reading
+from yavanna.models import Reading
 
 
 def test_reading_defaults_recorded_at_to_utc_now():

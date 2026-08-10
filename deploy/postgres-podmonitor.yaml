@@ -1,4 +1,4 @@
-# Hand-managed PodMonitor for auto-water's CNPG instance metrics endpoint
+# Hand-managed PodMonitor for yavanna's CNPG instance metrics endpoint
 # (:9187), replacing the deprecated spec.monitoring.enablePodMonitor flag —
 # CNPG is removing operator-managed PodMonitors (deprecated in 1.26). Mirrors
 # what the operator generated; `cnpg.io/podRole: instance` is required (its
@@ -7,13 +7,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: auto-water-db-metrics
-  namespace: auto-water
+  name: yavanna-db-metrics
+  namespace: yavanna
 spec:
   namespaceSelector: {}
   selector:
     matchLabels:
-      cnpg.io/cluster: auto-water-db
+      cnpg.io/cluster: yavanna-db
       cnpg.io/podRole: instance
   podMetricsEndpoints:
     - port: metrics

@@ -1,6 +1,6 @@
 import pytest
 
-from auto_water.config import Config
+from yavanna.config import Config
 
 
 def test_defaults_when_env_unset(monkeypatch):

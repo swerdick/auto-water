@@ -7,13 +7,13 @@ services:
   postgres:
     image: docker.io/library/postgres:18-trixie
     environment:
-      POSTGRES_USER: autowater
-      POSTGRES_PASSWORD: autowater
-      POSTGRES_DB: autowater
+      POSTGRES_USER: yavanna
+      POSTGRES_PASSWORD: yavanna
+      POSTGRES_DB: yavanna
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U autowater"]
+      test: ["CMD-SHELL", "pg_isready -U yavanna"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -21,12 +21,12 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    command: ["python", "-m", "auto_water.migrate", "up"]
+    command: ["python", "-m", "yavanna.migrate", "up"]
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://autowater:autowater@postgres:5432/autowater
+      DATABASE_URL: postgresql://yavanna:yavanna@postgres:5432/yavanna
   app:
     build:
       context: .
@@ -39,5 +39,5 @@ services:
         condition: service_completed_successfully
     environment:
       SINK: postgres
-      DATABASE_URL: postgresql://autowater:autowater@postgres:5432/autowater
+      DATABASE_URL: postgresql://yavanna:yavanna@postgres:5432/yavanna
       POLL_INTERVAL_SECONDS: "10"
