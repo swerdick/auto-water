@@ -9,7 +9,7 @@ class Heartbeat:
     """A liveness heartbeat backed by a file's modification time.
 
     The poller calls :meth:`touch` each cycle. The k8s liveness probe runs
-    ``python -m auto_water.health`` which exits non-zero when the file is
+    ``python -m yavanna.health`` which exits non-zero when the file is
     stale, so a wedged poll loop (e.g. a blocking I²C read) gets the pod
     restarted instead of silently going quiet.
     """

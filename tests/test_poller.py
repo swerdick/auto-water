@@ -1,10 +1,10 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
-from auto_water.models import Reading
-from auto_water.poller import Poller
-from auto_water.sensors.base import SensorError
-from auto_water.spill import SpillStore
+from yavanna.models import Reading
+from yavanna.poller import Poller
+from yavanna.sensors.base import SensorError
+from yavanna.spill import SpillStore
 
 
 class FakeSensor:
@@ -103,7 +103,7 @@ def test_poll_once_buffers_on_sink_failure_then_flushes():
 def test_buffer_is_bounded_and_warns_on_drop(caplog):
     sink = FakeSink(fail_times=100)
     poller = Poller([FakeSensor("s", [_reading()])], sink, interval=0.0, heartbeat=FakeHeartbeat(), buffer_max=3)
-    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+    with caplog.at_level(logging.WARNING, logger="yavanna.poller"):
         for _ in range(10):
             poller.poll_once()
     # The hard count cap holds even though every write failed.
@@ -120,7 +120,7 @@ def test_buffer_evicts_readings_older_than_retention(caplog):
     sink = FakeSink(fail_times=100)
     poller = Poller([], sink, interval=0.0, heartbeat=FakeHeartbeat(), retention_seconds=60)
     poller._buffer.append(old)  # noqa: SLF001 - seeding the buffer to exercise eviction
-    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+    with caplog.at_level(logging.WARNING, logger="yavanna.poller"):
         poller.poll_once()
     # The 2-minute-old reading exceeds the 60s window → evicted, not retained.
     assert len(poller._buffer) == 0  # noqa: SLF001 - asserting the time bound directly
@@ -216,7 +216,7 @@ def test_spill_pruned_to_buffer_cap_at_load(tmp_path, caplog):
     seed.append([_reading(f"s{i}") for i in range(5)])
     seed.close()
 
-    with caplog.at_level(logging.WARNING, logger="auto_water.poller"):
+    with caplog.at_level(logging.WARNING, logger="yavanna.poller"):
         poller = _poller([], FakeSink(fail_times=100), buffer_max=3, spill=SpillStore(path))
     assert "exceeds the buffer cap" in caplog.text
     assert [r.sensor_id for r in poller._buffer] == ["s2", "s3", "s4"]  # noqa: SLF001
@@ -229,7 +229,7 @@ def test_broken_spill_degrades_to_memory_only(tmp_path, caplog):
     # disables itself and the poller runs exactly as before.
     bad_dir = tmp_path / "spill.db"
     bad_dir.mkdir()
-    with caplog.at_level(logging.ERROR, logger="auto_water.spill"):
+    with caplog.at_level(logging.ERROR, logger="yavanna.spill"):
         spill = SpillStore(str(bad_dir))
     assert "spill store unavailable" in caplog.text
 

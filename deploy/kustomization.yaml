@@ -8,5 +8,5 @@ resources:
   - deployment.yaml
   - grafana-dashboard.yaml
 images:
-  - name: ghcr.io/swerdick/auto-water
+  - name: ghcr.io/swerdick/yavanna
     newTag: "0.2.0" # x-release-please-version

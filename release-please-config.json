@@ -15,7 +15,7 @@
         { "type": "chore", "section": "Chores", "hidden": true }
       ],
       "extra-files": [
-        { "type": "generic", "path": "src/auto_water/__init__.py" },
+        { "type": "generic", "path": "src/yavanna/__init__.py" },
         { "type": "generic", "path": "deploy/kustomization.yaml" }
       ]
     }

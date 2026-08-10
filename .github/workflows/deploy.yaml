@@ -19,7 +19,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE: ghcr.io/swerdick/auto-water
+  IMAGE: ghcr.io/swerdick/yavanna
 
 jobs:
   build-and-push:

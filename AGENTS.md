@@ -2,7 +2,7 @@
 
 ## Architecture
 
-Refer to `../project-hub/auto-water/` for architectural documents.
+Refer to `../project-hub/yavanna/` for architectural documents.
 
 ## Testing
 

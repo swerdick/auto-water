@@ -2,11 +2,11 @@ import logging
 
 import pytest
 
-from auto_water.config import Config
-from auto_water.models import Reading
-from auto_water.sinks import build_sink
-from auto_water.sinks.postgres import PostgresSink
-from auto_water.sinks.stdout import StdoutSink
+from yavanna.config import Config
+from yavanna.models import Reading
+from yavanna.sinks import build_sink
+from yavanna.sinks.postgres import PostgresSink
+from yavanna.sinks.stdout import StdoutSink
 
 # --- build_sink ------------------------------------------------------------
 
@@ -35,7 +35,7 @@ def test_build_sink_unknown():
 
 def test_stdout_sink_logs_each_reading(caplog):
     sink = StdoutSink()
-    with caplog.at_level(logging.INFO, logger="auto_water.sinks.stdout"):
+    with caplog.at_level(logging.INFO, logger="yavanna.sinks.stdout"):
         sink.write([Reading("bh1750", "illuminance", 5.0, "lux")])
     assert "sensor_id=bh1750" in caplog.text
     assert "metric=illuminance" in caplog.text

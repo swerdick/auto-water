@@ -1,4 +1,4 @@
-from auto_water.migrate import load_migrations, migrate_down, migrate_up
+from yavanna.migrate import load_migrations, migrate_down, migrate_up
 
 
 class FakeCursor:

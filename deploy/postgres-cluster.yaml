@@ -1,17 +1,17 @@
-# CloudNativePG cluster for auto-water's sensor readings.
+# CloudNativePG cluster for yavanna's sensor readings.
 #
 # imageName is intentionally omitted so the cluster uses the operator's default
 # operand image (PostgreSQL 18.x on the homelab's CNPG 1.29) — guaranteed
 # compatible with the running operator and keeps new clusters on PG18. Immich
 # stays on its own pinned PG16 image; one operator serves both.
 #
-# CNPG generates a `auto-water-db-app` Secret containing a ready-to-use `uri`
-# connection string for the `autowater` database — the Deployment reads it.
+# CNPG generates a `yavanna-db-app` Secret containing a ready-to-use `uri`
+# connection string for the `yavanna` database — the Deployment reads it.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: auto-water-db
-  namespace: auto-water
+  name: yavanna-db
+  namespace: yavanna
 spec:
   instances: 1
   storage:
@@ -19,8 +19,8 @@ spec:
     storageClass: nfs-scratch
   bootstrap:
     initdb:
-      database: autowater
-      owner: autowater
+      database: yavanna
+      owner: yavanna
   # Expose the read-write endpoint on a stable LAN IP via MetalLB so GUI
   # clients (DataGrip) can connect without a kubectl port-forward. CNPG owns
   # the service (correct primary selector + lifecycle).
@@ -30,7 +30,7 @@ spec:
         - selectorType: rw
           serviceTemplate:
             metadata:
-              name: auto-water-db-lb
+              name: yavanna-db-lb
               annotations:
                 metallb.universe.tf/address-pool: general-pool
                 metallb.universe.tf/loadBalancerIPs: "192.168.1.221"

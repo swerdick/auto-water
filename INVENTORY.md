@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-A catalog of the parts on hand for the next iteration of Auto-Water (the
+A catalog of the parts on hand for the next iteration of Yavanna (the
 samwise / Raspberry Pi 5 build). Compiled from a photo dig through the
 old Raspberry Pi / Arduino parts boxes on **2026-05-23**.
 
@@ -65,7 +65,7 @@ points back to where each item appears so you can cross-check.
 
 | Item | Qty | Photo | Notes |
 |------|-----|-------|-------|
-| **Raspberry Pi 2 Model B** v1.1 (2014, clear Vilros case) | 1 | 30, 33–36 | ✅ Found 2026-05-24 with the 8-ch relay + original resistive sensors still wired. ARMv7 **32-bit**, quad-core A7, 1 GB RAM, Edimax USB WiFi, 40-pin header. **Won't join k3s** (32-bit / 1 GB / multi-arch burden) — but a great standalone **actuation bench rig**: classic RPi.GPIO stack, runs the same `auto_water` app via systemd. |
+| **Raspberry Pi 2 Model B** v1.1 (2014, clear Vilros case) | 1 | 30, 33–36 | ✅ Found 2026-05-24 with the 8-ch relay + original resistive sensors still wired. ARMv7 **32-bit**, quad-core A7, 1 GB RAM, Edimax USB WiFi, 40-pin header. **Won't join k3s** (32-bit / 1 GB / multi-arch burden) — but a great standalone **actuation bench rig**: classic RPi.GPIO stack, runs the same `yavanna` app via systemd. |
 | **Raspberry Pi** (red/white case, photo 13) | 1 | 13 | ❓ A separate older Pi — confirm model. The build target is `samwise` (Pi 5), already a k3s worker. |
 | **Arduino starter kit** | 1 | 3, 7, 12 | Source of many of the loose sensors/parts here. Handy as a bench test rig / second brain. |
 | **Breadboards** (full-size, half, mini) | 3+ | 13 | Prototyping. |

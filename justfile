@@ -1,4 +1,4 @@
-project_name := "auto-water"
+project_name := "yavanna"
 image_tag := env("IMAGE_TAG", "latest")
 container_cli := env("CONTAINER_CLI", "podman")
 
@@ -8,15 +8,15 @@ default:
 
 # Run the poller locally (stdout sink, no hardware) — Ctrl-C to stop
 dev:
-    PYTHONPATH=src SINK=stdout python -m auto_water
+    PYTHONPATH=src SINK=stdout python -m yavanna
 
 # Apply pending database migrations (needs DATABASE_URL in env)
 migrate:
-    PYTHONPATH=src python -m auto_water.migrate up
+    PYTHONPATH=src python -m yavanna.migrate up
 
 # Roll back migrations (default to version 0; pass --to N to stop earlier)
 migrate-down *args:
-    PYTHONPATH=src python -m auto_water.migrate down {{args}}
+    PYTHONPATH=src python -m yavanna.migrate down {{args}}
 
 # Compile/bundle source code (syntax check for Python)
 build:
@@ -69,9 +69,9 @@ ci-full: ci container-build
 all: fmt ci-full
 
 forward-db:
-    kubectl -n auto-water port-forward svc/auto-water-db-rw 5432:5432
+    kubectl -n yavanna port-forward svc/yavanna-db-rw 5432:5432
 
-# Export Grafana dashboards tagged 'auto-water' to grafana-dashboards/.
+# Export Grafana dashboards tagged 'yavanna' to grafana-dashboards/.
 # Strips Grafana-assigned id/version so re-saves don't churn the diff.
 # (Mirrors homelab's backup-grafana; Bitwarden vault must be unlocked.)
 backup-grafana:
@@ -83,9 +83,9 @@ backup-grafana:
     OUTDIR="grafana-dashboards"
     mkdir -p "$OUTDIR"
     UIDS=$(curl -fsS -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
-        "$GRAFANA_URL/api/search?type=dash-db&tag=auto-water" | jq -r '.[].uid')
+        "$GRAFANA_URL/api/search?type=dash-db&tag=yavanna" | jq -r '.[].uid')
     if [[ -z "$UIDS" ]]; then
-        echo "No dashboards tagged 'auto-water' found."
+        echo "No dashboards tagged 'yavanna' found."
         exit 0
     fi
     count=0

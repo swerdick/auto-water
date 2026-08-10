@@ -1,4 +1,4 @@
-"""auto-water: sensor-reading service for the Raspberry Pi 5 plant-watering build.
+"""yavanna: sensor-reading service for the Raspberry Pi 5 plant-watering build.
 
 This package replaces the original Flask/Redis deployment test. It polls the
 digital sensors wired to the Pi (I²C temp/humidity + light, 1-Wire soil temp,

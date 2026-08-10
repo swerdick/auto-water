@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auto-water
-  namespace: auto-water
+  name: yavanna
+  namespace: yavanna
   labels:
-    app: auto-water
+    app: yavanna
 spec:
   replicas: 1
   # One set of physical sensors on samwise — never run two pollers at once.
@@ -12,11 +12,11 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: auto-water
+      app: yavanna
   template:
     metadata:
       labels:
-        app: auto-water
+        app: yavanna
     spec:
       # Pin to the Pi sensor host and tolerate its NoSchedule taint.
       nodeSelector:
@@ -30,18 +30,18 @@ spec:
       # starts so `readings` exists on first write.
       initContainers:
         - name: migrate
-          image: ghcr.io/swerdick/auto-water:latest
+          image: ghcr.io/swerdick/yavanna:latest
           imagePullPolicy: Always
-          command: ["python", "-m", "auto_water.migrate", "up"]
+          command: ["python", "-m", "yavanna.migrate", "up"]
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: auto-water-db-app
+                  name: yavanna-db-app
                   key: uri
       containers:
         - name: poller
-          image: ghcr.io/swerdick/auto-water:latest
+          image: ghcr.io/swerdick/yavanna:latest
           imagePullPolicy: Always
           # privileged + root for I²C (/dev/i2c-1) and 1-Wire (/sys/bus/w1)
           # access on the Pi. Tighten later with specific device mounts.
@@ -68,7 +68,7 @@ spec:
             - name: ADS1115_ENABLED
               value: "1"
             # Capacitive soil-moisture probes: one JSON object per ADS1115 channel.
-            # dry_raw/wet_raw come from `python -m auto_water.scan` (dry = in air,
+            # dry_raw/wet_raw come from `python -m yavanna.scan` (dry = in air,
             # wet = in water); until both are set a probe logs raw counts only.
             # Up to 4 channels/board across 0x48/0x49/0x4A → 12 probes max. A probe
             # whose board/channel isn't wired is logged-and-skipped, not fatal.
@@ -94,17 +94,17 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: auto-water-db-app
+                  name: yavanna-db-app
                   key: uri
           volumeMounts:
             - name: buffer
               mountPath: /data
           livenessProbe:
             exec:
-              command: ["python", "-m", "auto_water.health"]
+              command: ["python", "-m", "yavanna.health"]
             initialDelaySeconds: 20
             periodSeconds: 30
       volumes:
         - name: buffer
           persistentVolumeClaim:
-            claimName: auto-water-buffer
+            claimName: yavanna-buffer

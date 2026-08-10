@@ -1,4 +1,4 @@
-"""Bring-up / calibration helper: ``python -m auto_water.scan``.
+"""Bring-up / calibration helper: ``python -m yavanna.scan``.
 
 Scans the I²C bus (which of 0x48-0x4B respond) and then streams the live raw
 ADC count for every configured ADS1115 probe, so you can confirm each board and
@@ -35,7 +35,7 @@ def _main(argv: list[str] | None = None) -> int:
     from .config import Config
 
     parser = argparse.ArgumentParser(
-        prog="auto_water.scan",
+        prog="yavanna.scan",
         description="Scan the I²C bus and stream raw ADS1115 counts for bring-up/calibration.",
     )
     parser.add_argument(

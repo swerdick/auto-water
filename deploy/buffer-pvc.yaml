@@ -6,8 +6,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: auto-water-buffer
-  namespace: auto-water
+  name: yavanna-buffer
+  namespace: yavanna
 spec:
   accessModes:
     - ReadWriteOnce

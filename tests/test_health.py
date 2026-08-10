@@ -1,4 +1,4 @@
-from auto_water.health import Heartbeat, _main
+from yavanna.health import Heartbeat, _main
 
 
 def test_heartbeat_fresh_after_touch(tmp_path):

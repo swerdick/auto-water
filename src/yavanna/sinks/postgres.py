@@ -21,7 +21,7 @@ def _default_connect(dsn: str) -> Any:
 class PostgresSink(ReadingSink):
     """Writes readings to a Postgres ``readings`` table (a CNPG cluster in prod).
 
-    The schema is owned by the migrations (``auto_water.migrate``), not this sink —
+    The schema is owned by the migrations (``yavanna.migrate``), not this sink —
     the ``readings`` table is expected to already exist (migrations run as a k8s
     initContainer / compose one-shot before the poller starts). The connection is
     created lazily and re-established on demand, so the sink rides out the backend
