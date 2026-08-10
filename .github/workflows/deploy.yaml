@@ -1,13 +1,18 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'requirements*.txt'
-      - 'Containerfile'
+  workflow_call:
+    inputs:
+      image-tag:
+        description: "Tag for the container image (plain semver, e.g. 0.2.0)"
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      image-tag:
+        description: "Tag to build and deploy (e.g. 0.2.0). Select the matching vX.Y.Z tag in 'Use workflow from' to rebuild that release."
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -43,7 +48,7 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ inputs.image-tag }}
             ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
