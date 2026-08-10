@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/swerdick/auto-water/compare/v0.2.0...v0.3.0) (2026-08-10)
+
+
+### Features
+
+* rename project to yavanna ([8323699](https://github.com/swerdick/auto-water/commit/83236991a577ca14ad76d81a6e3b81f3cc3a4ee6))
+
 ## [0.2.0](https://github.com/swerdick/auto-water/compare/v0.1.0...v0.2.0) (2026-08-10)
 
 
