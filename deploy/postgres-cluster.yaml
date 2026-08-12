@@ -14,6 +14,30 @@ metadata:
   namespace: yavanna
 spec:
   instances: 1
+
+  # Continuous WAL archiving + daily base backups to Backblaze B2 via the
+  # Barman Cloud CNPG-I plugin. Sensor history is the least reproducible data
+  # in the cluster — everything else can be re-pulled or re-derived — so this
+  # is the one that most wanted covering.
+  #
+  # The referenced ObjectStore (yavanna-db-b2) and the ScheduledBackup live in
+  # the HOMELAB repo under kubernetes/apps/yavanna/, not here. That split is
+  # deliberate: they need the B2 credential, which is a SOPS-encrypted Secret,
+  # and the Flux Kustomization that syncs this repo has no `decryption:` block,
+  # so a Secret committed here would arrive still encrypted. Only the plugin
+  # reference has to live alongside the Cluster. ObjectStore is namespaced and
+  # the plugin resolves barmanObjectName against this Cluster's own namespace,
+  # so both halves land in `yavanna` and find each other.
+  #
+  # serverName is intentionally omitted: it defaults to the Cluster name, so a
+  # restore clone bootstrapped from this store archives under its own prefix
+  # rather than writing into this one's.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: yavanna-db-b2
+
   storage:
     size: 5Gi
     storageClass: nfs-scratch
