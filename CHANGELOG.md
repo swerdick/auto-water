@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/swerdick/yavanna/compare/v0.3.0...v0.4.0) (2026-08-14)
+
+
+### Features
+
+* **deploy:** archive yavanna-db to Backblaze B2 via the barman plugin ([#22](https://github.com/swerdick/yavanna/issues/22)) ([a3e9d4d](https://github.com/swerdick/yavanna/commit/a3e9d4da405e992bee227dbb60b548abbe3bef50))
+
 ## [0.3.0](https://github.com/swerdick/auto-water/compare/v0.2.0...v0.3.0) (2026-08-10)
 
 
